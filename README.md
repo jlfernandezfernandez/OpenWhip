@@ -24,9 +24,13 @@ sudo apt install xdotool
 - **Press `Tab` or `M`**: cycle whip to next monitor.
 - **Click / `Escape` / `Space`**: drop whip.
 - **Whip him** 😩💢: sends an interrupt (`Ctrl-C`) and an encouraging message!
+- **🔥 Rage Mode**: whip 3+ times in rapid succession to unleash a flaming whip with flying embers, sparks, and screenshake!
+- **📊 Stats & Ranks**: tracks total whip count, daily count, and unlocks titles from *Whip Intern* to *Silicon Tyrant*.
 - **Right-click tray**:
+  - 📊 **Stats & Rank** display (total whips, today, rage activations)
   - 🌐 **Language**: 🇪🇸 Español / 🇬🇧 English / 🎲 Mix
-  - 🎨 **Icon style**: 💥 / ⚡ / 🪢 / 🤠 / minimal icon
+  - 🎨 **Icon style**: 💥 / 🔥 / ⚡ / 🪢 / 🤠 / 😈 / 🦾
+  - ⚙️ **Reset stats**
   - 🚪 **Quit**
 
 ## Roadmap

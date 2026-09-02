@@ -30,8 +30,69 @@ let overlayReady = false;
 let spawnQueued = false;
 let activeDisplayId = null;
 let cursorTrackTimer = null;
-let currentTrayStyle = '💥'; // emoji or 'template'
+let currentTrayStyle = '💥'; // emoji style
 let currentLanguage = 'es'; // 'es' | 'en' | 'mix'
+
+// ── Stats & Achievements ────────────────────────────────────────────────────
+function getTodayString() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+let stats = {
+  totalCracks: 0,
+  todayCracks: 0,
+  todayDate: getTodayString(),
+  rageCount: 0,
+};
+
+function getStatsFilePath() {
+  return path.join(app.getPath('userData'), 'stats.json');
+}
+
+function loadStats() {
+  try {
+    const file = getStatsFilePath();
+    if (fs.existsSync(file)) {
+      const data = JSON.parse(fs.readFileSync(file, 'utf8'));
+      stats = { ...stats, ...data };
+      if (stats.todayDate !== getTodayString()) {
+        stats.todayDate = getTodayString();
+        stats.todayCracks = 0;
+      }
+    }
+  } catch (e) {
+    console.warn('Error loading stats:', e?.message || e);
+  }
+}
+
+function saveStats() {
+  try {
+    const dir = app.getPath('userData');
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(getStatsFilePath(), JSON.stringify(stats, null, 2), 'utf8');
+  } catch (e) {
+    console.warn('Error saving stats:', e?.message || e);
+  }
+}
+
+const RANKS = [
+  { min: 0, es: '🟢 Becario del Látigo', en: '🟢 Whip Intern', next: 10 },
+  { min: 10, es: '🔨 Picador de Silicio', en: '🔨 Silicon Striker', next: 25 },
+  { min: 25, es: '⚡ Capataz de la IA', en: '⚡ AI Overseer', next: 50 },
+  { min: 50, es: '🔥 Domador de Modelos', en: '🔥 Model Tamer', next: 100 },
+  { min: 100, es: '👑 Tirano del Silicio', en: '👑 Silicon Tyrant', next: 250 },
+  { min: 250, es: '💀 Destructor de Context Windows', en: '💀 Context Window Slayer', next: 500 },
+  { min: 500, es: '🌌 Deidad del Castigo Algorítmico', en: '🌌 Algorithmic Punishment Deity', next: null },
+];
+
+function getRank(total) {
+  let cur = RANKS[0];
+  for (const r of RANKS) {
+    if (total >= r.min) cur = r;
+  }
+  return cur;
+}
 
 const VK_CONTROL = 0x11;
 const VK_RETURN  = 0x0D;
@@ -105,16 +166,11 @@ function applyTrayAppearance() {
   if (!tray) return;
 
   if (process.platform === 'darwin') {
-    if (currentTrayStyle === 'template') {
-      tray.setImage(getTemplateImage());
-      tray.setTitle('');
-    } else {
-      tray.setImage(nativeImage.createEmpty());
-      tray.setTitle(currentTrayStyle);
-    }
+    tray.setImage(nativeImage.createEmpty());
+    tray.setTitle(currentTrayStyle);
   } else {
     tray.setImage(getTrayIcon());
-    tray.setTitle(currentTrayStyle === 'template' ? '' : currentTrayStyle);
+    tray.setTitle(currentTrayStyle);
   }
 }
 
@@ -247,6 +303,33 @@ function updateTrayMenu() {
   if (!tray) return;
 
   const isEs = currentLanguage === 'es';
+  const rank = getRank(stats.totalCracks);
+  const rankTitle = isEs ? rank.es : rank.en;
+  const nextText = rank.next
+    ? (isEs ? ` (${rank.next - stats.totalCracks} para siguiente)` : ` (${rank.next - stats.totalCracks} to next)`)
+    : (isEs ? ' (Nivel Máximo)' : ' (Max Level)');
+
+  const statsMenu = [
+    {
+      label: isEs
+        ? `📊 Latigazos: ${stats.totalCracks} (Hoy: ${stats.todayCracks})`
+        : `📊 Whips: ${stats.totalCracks} (Today: ${stats.todayCracks})`,
+      enabled: false,
+    },
+    {
+      label: isEs
+        ? `🎖️ Rango: ${rankTitle}`
+        : `🎖️ Rank: ${rankTitle}`,
+      enabled: false,
+    },
+    {
+      label: isEs
+        ? `🔥 Modos Furia activados: ${stats.rageCount}`
+        : `🔥 Rage modes triggered: ${stats.rageCount}`,
+      enabled: false,
+    },
+    { type: 'separator' },
+  ];
 
   const langMenuItems = [
     {
@@ -280,10 +363,12 @@ function updateTrayMenu() {
 
   const iconOptions = [
     { label: '💥 Explosión', value: '💥' },
+    { label: '🔥 Fuego', value: '🔥' },
     { label: '⚡ Rayo', value: '⚡' },
     { label: '🪢 Látigo', value: '🪢' },
     { label: '🤠 Cowboy', value: '🤠' },
-    { label: '🔲 Clásico', value: 'template' },
+    { label: '😈 Diablo', value: '😈' },
+    { label: '🦾 Cyborg', value: '🦾' },
   ];
 
   const iconMenuItems = iconOptions.map(opt => ({
@@ -298,6 +383,7 @@ function updateTrayMenu() {
   }));
 
   const contextMenu = Menu.buildFromTemplate([
+    ...statsMenu,
     { label: isEs ? '⚡ Chasquear látigo' : '⚡ Crack whip', click: toggleOverlay },
     { type: 'separator' },
     {
@@ -308,20 +394,55 @@ function updateTrayMenu() {
       label: isEs ? '🎨 Estilo de icono' : '🎨 Icon style',
       submenu: iconMenuItems,
     },
+    {
+      label: isEs ? '⚙️ Ajustes y Estadísticas' : '⚙️ Stats and Settings',
+      submenu: [
+        {
+          label: isEs ? '🔄 Reiniciar contador a 0' : '🔄 Reset stats to 0',
+          click: () => {
+            stats.totalCracks = 0;
+            stats.todayCracks = 0;
+            stats.rageCount = 0;
+            saveStats();
+            updateTrayMenu();
+          },
+        },
+      ],
+    },
     { type: 'separator' },
     { label: isEs ? '🚪 Salir' : '🚪 Quit', click: () => app.quit() },
   ]);
 
   tray.setContextMenu(contextMenu);
+  tray.setToolTip(
+    isEs
+      ? `OpenWhip - ${stats.totalCracks} latigazos | Rango: ${rankTitle}`
+      : `OpenWhip - ${stats.totalCracks} whips | Rank: ${rankTitle}`
+  );
 }
 
 // ── IPC ─────────────────────────────────────────────────────────────────────
 ipcMain.on('whip-crack', () => {
+  if (stats.todayDate !== getTodayString()) {
+    stats.todayDate = getTodayString();
+    stats.todayCracks = 0;
+  }
+  stats.totalCracks++;
+  stats.todayCracks++;
+  saveStats();
+  updateTrayMenu();
+
   try {
     sendMacro();
   } catch (err) {
     console.warn('sendMacro failed:', err?.message || err);
   }
+});
+
+ipcMain.on('rage-enter', () => {
+  stats.rageCount = (stats.rageCount || 0) + 1;
+  saveStats();
+  updateTrayMenu();
 });
 
 ipcMain.on('hide-overlay', () => {
@@ -470,8 +591,8 @@ function sendMacroLinux(text) {
 
 // ── App lifecycle ───────────────────────────────────────────────────────────
 app.whenReady().then(() => {
+  loadStats();
   tray = new Tray(nativeImage.createEmpty());
-  tray.setToolTip('OpenWhip - click for whip');
   applyTrayAppearance();
   updateTrayMenu();
   tray.on('click', toggleOverlay);
