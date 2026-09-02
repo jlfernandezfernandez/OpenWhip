@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Tray, Menu, ipcMain, nativeImage, screen } = require('electron');
+const { app, BrowserWindow, Tray, Menu, ipcMain, nativeImage, screen, globalShortcut } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -209,7 +209,7 @@ function startCursorTracking() {
       overlay.setBounds(nearest.bounds);
       overlay.webContents.send('display-changed', nearest.bounds);
     }
-  }, 40);
+  }, 75);
 }
 
 function stopCursorTracking() {
@@ -384,7 +384,7 @@ function updateTrayMenu() {
 
   const contextMenu = Menu.buildFromTemplate([
     ...statsMenu,
-    { label: isEs ? '⚡ Chasquear látigo' : '⚡ Crack whip', click: toggleOverlay },
+    { label: isEs ? '⚡ Chasquear látigo (⌥⇧W)' : '⚡ Crack whip (⌥⇧W)', click: toggleOverlay },
     { type: 'separator' },
     {
       label: isEs ? '🌐 Idioma de frases' : '🌐 Phrase language',
@@ -596,12 +596,23 @@ app.whenReady().then(() => {
   applyTrayAppearance();
   updateTrayMenu();
   tray.on('click', toggleOverlay);
+
+  // Global hotkey to crack/toggle whip from anywhere
+  try {
+    globalShortcut.register('Alt+Shift+W', () => {
+      toggleOverlay();
+    });
+  } catch (e) {
+    console.warn('Could not register global hotkey:', e?.message || e);
+  }
 });
 
 app.on('second-instance', () => {
   toggleOverlay();
 });
 
-app.on('window-all-closed', e => e.preventDefault());
+app.on('will-quit', () => {
+  globalShortcut.unregisterAll();
+});
 
-app.on('window-all-closed', e => e.preventDefault()); // keep alive in tray
+app.on('window-all-closed', e => e.preventDefault());

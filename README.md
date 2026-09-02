@@ -19,11 +19,12 @@ sudo apt install xdotool
 
 ## Controls
 
-- **Click tray icon**: spawn whip on whichever screen your mouse is on.
+- **Click tray icon** or press **`Option+Shift+W` / `Alt+Shift+W`**: spawn whip on whichever screen your mouse is on.
 - **Multi-monitor Auto**: seamlessly follow cursor across all connected screens.
 - **Press `Tab` or `M`**: cycle whip to next monitor.
 - **Click / `Escape` / `Space`**: drop whip.
 - **Whip him** 😩💢: sends an interrupt (`Ctrl-C`) and an encouraging message!
+- **⚡ Zero Idle CPU**: automatic sleep lifecycle (0% CPU usage when idle).
 - **🔥 Rage Mode**: whip 3+ times in rapid succession to unleash a flaming whip with flying embers, sparks, and screenshake!
 - **📊 Stats & Ranks**: tracks total whip count, daily count, and unlocks titles from *Whip Intern* to *Silicon Tyrant*.
 - **Right-click tray**:

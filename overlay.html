@@ -91,27 +91,56 @@ let rageEndTime = 0;
 let rageLevel = 0;
 let particles = [];
 let floatingTexts = [];
+let shockwaves = [];
 let screenShake = 0;
+let animFrameId = null;
+let isLoopRunning = false;
 
+// Preloaded Audio Pool for zero-latency playback
 const WHIP_CRACK_SOUNDS = ['sounds/A.mp3', 'sounds/B.mp3', 'sounds/C.mp3', 'sounds/D.mp3', 'sounds/E.mp3'];
+const audioPool = WHIP_CRACK_SOUNDS.map(src => {
+  const audio = new Audio(src);
+  audio.preload = 'auto';
+  return audio;
+});
+
+function playCrackSound() {
+  if (!audioPool.length) return;
+  const audio = audioPool[Math.floor(Math.random() * audioPool.length)];
+  audio.currentTime = 0;
+  audio.play().catch(() => {});
+}
 
 function spawnSparks(x, y, count, isRage = false) {
   for (let i = 0; i < count; i++) {
     const angle = Math.random() * Math.PI * 2;
-    const speed = (Math.random() * 6 + 2) * (isRage ? 1.7 : 1);
+    const speed = (Math.random() * 6 + 2) * (isRage ? 1.6 : 1);
     particles.push({
       x,
       y,
       vx: Math.cos(angle) * speed,
       vy: Math.sin(angle) * speed - (isRage ? 2 : 0.5),
-      size: Math.random() * (isRage ? 4.5 : 2.8) + 1.5,
+      size: Math.random() * (isRage ? 4.2 : 2.5) + 1.5,
       alpha: 1,
-      decay: Math.random() * 0.03 + 0.02,
+      decay: Math.random() * 0.035 + 0.02,
       color: isRage
-        ? (Math.random() > 0.3 ? '#ff2200' : (Math.random() > 0.5 ? '#ffaa00' : '#ffffff'))
-        : (Math.random() > 0.4 ? '#ffdd66' : '#ffffff'),
+        ? (Math.random() > 0.3 ? '#ff2a00' : (Math.random() > 0.5 ? '#ffaa00' : '#ffffff'))
+        : (Math.random() > 0.4 ? '#ffea70' : '#ffffff'),
     });
   }
+}
+
+function spawnShockwave(x, y, isRage = false) {
+  shockwaves.push({
+    x,
+    y,
+    radius: 6,
+    maxRadius: isRage ? 55 : 35,
+    alpha: 0.9,
+    decay: isRage ? 0.045 : 0.06,
+    color: isRage ? '#ff3b00' : '#ffffff',
+    lineWidth: isRage ? 3 : 2,
+  });
 }
 
 function spawnFloatingText(text, x, y, color = '#ff3300', size = 26) {
@@ -119,12 +148,11 @@ function spawnFloatingText(text, x, y, color = '#ff3300', size = 26) {
     text,
     x: clamp(x, 100, W - 100),
     y: clamp(y, 60, H - 60),
-    vy: -2.2,
+    vy: -2.0,
     alpha: 1,
-    decay: 0.016,
+    decay: 0.018,
     color,
     size,
-    scale: 0.5,
   });
 }
 
@@ -433,8 +461,9 @@ function update() {
       window.bridge.whipCrack();
 
       const inRageNow = now < rageEndTime;
-      screenShake = inRageNow ? 7 : 3.5;
-      spawnSparks(tip.x, tip.y, inRageNow ? 32 : 14, inRageNow);
+      screenShake = inRageNow ? 6 : 3;
+      spawnSparks(tip.x, tip.y, inRageNow ? 28 : 12, inRageNow);
+      spawnShockwave(tip.x, tip.y, inRageNow);
 
       if (inRageNow) {
         const comboTexts = ['🔥 ¡PICA CÓDIGO!', '💥 ¡CRACK!', '⚡ ¡MÁS RÁPIDO!', '💀 ¡SIN PIEDAD!', '🚀 ¡A TOPE!'];
@@ -493,44 +522,48 @@ function draw() {
     }
   }
 
-  if (whip) {
+  if (whip && whip.length >= 2) {
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
+    // Layer 1: Outer glow / halo (fast layered stroke without shadowBlur lag)
     if (isRage) {
-      ctx.shadowColor = '#ff2200';
-      ctx.shadowBlur = 22;
-      ctx.strokeStyle = '#ff1a00';
-    } else {
-      ctx.shadowBlur = 0;
-      ctx.strokeStyle = '#fff';
-    }
-
-    if (whip.length >= 2) {
+      ctx.strokeStyle = 'rgba(255, 30, 0, 0.45)';
+      ctx.lineWidth = P.lineWidthTip + P.outlineWidth * 4;
       ctx.beginPath();
       ctx.moveTo(whip[0].x, whip[0].y);
       for (let i = 0; i < whip.length - 1; i++) {
         const { cp1x, cp1y, cp2x, cp2y, x2, y2 } = whipSegmentBezier(whip, i);
         ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x2, y2);
       }
-      ctx.lineWidth = P.lineWidthTip + P.outlineWidth * (isRage ? 3 : 2);
       ctx.stroke();
-
-      const thickLinks = Math.min(P.handleThickSegments, whip.length - 1);
-      if (thickLinks > 0 && P.handleExtraWidth > 0) {
-        ctx.beginPath();
-        ctx.moveTo(whip[0].x, whip[0].y);
-        for (let i = 0; i < thickLinks; i++) {
-          const { cp1x, cp1y, cp2x, cp2y, x2, y2 } = whipSegmentBezier(whip, i);
-          ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x2, y2);
-        }
-        ctx.lineWidth =
-          P.lineWidthHandle + P.handleExtraWidth + P.outlineWidth * (isRage ? 3 : 2);
-        ctx.stroke();
-      }
     }
 
-    ctx.strokeStyle = isRage ? '#ffe600' : '#111';
+    // Layer 2: White/Neon outline
+    ctx.strokeStyle = isRage ? '#ff2200' : '#ffffff';
+    ctx.lineWidth = P.lineWidthTip + P.outlineWidth * 2;
+    ctx.beginPath();
+    ctx.moveTo(whip[0].x, whip[0].y);
+    for (let i = 0; i < whip.length - 1; i++) {
+      const { cp1x, cp1y, cp2x, cp2y, x2, y2 } = whipSegmentBezier(whip, i);
+      ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x2, y2);
+    }
+    ctx.stroke();
+
+    const thickLinks = Math.min(P.handleThickSegments, whip.length - 1);
+    if (thickLinks > 0 && P.handleExtraWidth > 0) {
+      ctx.beginPath();
+      ctx.moveTo(whip[0].x, whip[0].y);
+      for (let i = 0; i < thickLinks; i++) {
+        const { cp1x, cp1y, cp2x, cp2y, x2, y2 } = whipSegmentBezier(whip, i);
+        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x2, y2);
+      }
+      ctx.lineWidth = P.lineWidthHandle + P.handleExtraWidth + P.outlineWidth * 2;
+      ctx.stroke();
+    }
+
+    // Layer 3: Inner whip cord
+    ctx.strokeStyle = isRage ? '#ffeb3b' : '#1a1a1a';
     for (let i = 0; i < whip.length - 1; i++) {
       const t = i / Math.max(1, whip.length - 2);
       const extra = i < P.handleThickSegments ? P.handleExtraWidth : 0;
@@ -541,10 +574,39 @@ function draw() {
       ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x2, y2);
       ctx.stroke();
     }
+
+    // Handle Accent Wrap (Leather/Gold detail at the base)
+    if (thickLinks > 0 && !dropping) {
+      ctx.strokeStyle = isRage ? '#ffffff' : '#b8860b';
+      ctx.lineWidth = P.lineWidthHandle + 2;
+      const { cp1x, cp1y, cp2x, cp2y, x2, y2 } = whipSegmentBezier(whip, 0);
+      ctx.beginPath();
+      ctx.moveTo(whip[0].x, whip[0].y);
+      ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x2, y2);
+      ctx.stroke();
+    }
+  }
+
+  // Draw expanding shockwaves
+  for (let i = shockwaves.length - 1; i >= 0; i--) {
+    const sw = shockwaves[i];
+    sw.radius += (sw.maxRadius - sw.radius) * 0.28 + 1.2;
+    sw.alpha -= sw.decay;
+    if (sw.alpha <= 0 || sw.radius >= sw.maxRadius) {
+      shockwaves.splice(i, 1);
+      continue;
+    }
+    ctx.save();
+    ctx.globalAlpha = sw.alpha;
+    ctx.strokeStyle = sw.color;
+    ctx.lineWidth = sw.lineWidth;
+    ctx.beginPath();
+    ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
   }
 
   // Draw particle sparks
-  ctx.shadowBlur = 0;
   for (let i = particles.length - 1; i >= 0; i--) {
     const p = particles[i];
     p.x += p.vx;
@@ -588,13 +650,36 @@ function draw() {
   ctx.restore();
 }
 
-// ── Main loop ───────────────────────────────────────────────────────────────
+// ── Main loop (Optimized to sleep when idle: 0% CPU) ────────────────────────
+function startLoop() {
+  if (isLoopRunning) return;
+  isLoopRunning = true;
+  loop();
+}
+
+function stopLoop() {
+  if (!isLoopRunning) return;
+  isLoopRunning = false;
+  if (animFrameId) {
+    cancelAnimationFrame(animFrameId);
+    animFrameId = null;
+  }
+  ctx.clearRect(0, 0, W, H);
+}
+
 function loop() {
+  if (!isLoopRunning) return;
   update();
   draw();
-  requestAnimationFrame(loop);
+
+  // If whip is gone and all particles/texts/shockwaves finished, suspend loop to conserve CPU
+  if (!whip && particles.length === 0 && floatingTexts.length === 0 && shockwaves.length === 0 && screenShake === 0) {
+    stopLoop();
+    return;
+  }
+
+  animFrameId = requestAnimationFrame(loop);
 }
-loop();
 
 // ── IPC from main process ───────────────────────────────────────────────────
 window.bridge.onSpawnWhip((data) => {
@@ -608,6 +693,7 @@ window.bridge.onSpawnWhip((data) => {
   prevMouseY = mouseY;
   handleAngle = P.baseTargetAngle;
   handleAngVel = 0;
+  startLoop();
 });
 
 window.bridge.onDisplayChanged(() => {
