@@ -19,13 +19,15 @@ sudo apt install xdotool
 
 ## Controls
 
-- Click tray icon: spawn whip on the screen with your mouse cursor.
-- Move across screens: whip dynamically follows your cursor across multiple monitors.
-- Press `Tab` or `M`: cycle whip to next monitor.
-- Click / `Escape` / `Space`: drop whip.
-- Whip him 😩💢
-- It sends an interrupt (Ctrl-C) and one of 5 encouraging messages!
-- Right-click tray: select specific monitor, cycle screens, or choose tray icon style (💥, ⚡, 🪢, 🤠, minimal icon).
+- **Click tray icon**: spawn whip on whichever screen your mouse is on.
+- **Multi-monitor Auto**: seamlessly follow cursor across all connected screens.
+- **Press `Tab` or `M`**: cycle whip to next monitor.
+- **Click / `Escape` / `Space`**: drop whip.
+- **Whip him** 😩💢: sends an interrupt (`Ctrl-C`) and an encouraging message!
+- **Right-click tray**:
+  - 🌐 **Language**: 🇪🇸 Español / 🇬🇧 English / 🎲 Mix
+  - 🎨 **Icon style**: 💥 / ⚡ / 🪢 / 🤠 / minimal icon
+  - 🚪 **Quit**
 
 ## Roadmap
 

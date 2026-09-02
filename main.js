@@ -28,10 +28,10 @@ if (process.platform === 'win32') {
 let tray, overlay;
 let overlayReady = false;
 let spawnQueued = false;
-let selectedDisplayId = null; // null = follow cursor, or display.id
 let activeDisplayId = null;
 let cursorTrackTimer = null;
 let currentTrayStyle = '💥'; // emoji or 'template'
+let currentLanguage = 'es'; // 'es' | 'en' | 'mix'
 
 const VK_CONTROL = 0x11;
 const VK_RETURN  = 0x0D;
@@ -118,13 +118,8 @@ function applyTrayAppearance() {
   }
 }
 
-// ── Displays & Multi-Monitor Support ─────────────────────────────────────────
+// ── Displays & Multi-Monitor Support (Always Auto) ─────────────────────────
 function getTargetDisplay() {
-  const displays = screen.getAllDisplays();
-  if (selectedDisplayId !== null) {
-    const found = displays.find(d => d.id === selectedDisplayId);
-    if (found) return found;
-  }
   const cursorPos = screen.getCursorScreenPoint();
   return screen.getDisplayNearestPoint(cursorPos);
 }
@@ -136,15 +131,12 @@ function cycleDisplay() {
   const current = getTargetDisplay();
   const currentIndex = displays.findIndex(d => d.id === current.id);
   const nextDisplay = displays[(currentIndex + 1) % displays.length];
-
-  selectedDisplayId = nextDisplay.id;
   activeDisplayId = nextDisplay.id;
 
   if (overlay && overlay.isVisible()) {
     overlay.setBounds(nextDisplay.bounds);
     overlay.webContents.send('display-changed', nextDisplay.bounds);
   }
-  updateTrayMenu();
 }
 
 function startCursorTracking() {
@@ -154,9 +146,6 @@ function startCursorTracking() {
       stopCursorTracking();
       return;
     }
-    // Only track cursor across screens when in follow-cursor (auto) mode
-    if (selectedDisplayId !== null) return;
-
     const cursorPos = screen.getCursorScreenPoint();
     const nearest = screen.getDisplayNearestPoint(cursorPos);
     if (activeDisplayId !== nearest.id) {
@@ -257,56 +246,44 @@ function toggleOverlay() {
 function updateTrayMenu() {
   if (!tray) return;
 
-  const displays = screen.getAllDisplays();
-  const primaryDisplay = screen.getPrimaryDisplay();
+  const isEs = currentLanguage === 'es';
 
-  const displayMenuItems = [
+  const langMenuItems = [
     {
-      label: '🎯 Seguir ratón (Auto)',
+      label: '🇪🇸 Español',
       type: 'radio',
-      checked: selectedDisplayId === null,
+      checked: currentLanguage === 'es',
       click: () => {
-        selectedDisplayId = null;
+        currentLanguage = 'es';
         updateTrayMenu();
       },
     },
-    { type: 'separator' },
-    ...displays.map((d, idx) => {
-      const isPrimary = d.id === primaryDisplay.id;
-      const name = isPrimary ? `Pantalla ${idx + 1} (Integrada / Principal)` : `Pantalla ${idx + 1} (Externa)`;
-      const dimensions = `${d.bounds.width}x${d.bounds.height}`;
-      return {
-        label: `${isPrimary ? '💻' : '🖥️'} ${name} [${dimensions}]`,
-        type: 'radio',
-        checked: selectedDisplayId === d.id,
-        click: () => {
-          selectedDisplayId = d.id;
-          if (overlay && overlay.isVisible()) {
-            overlay.setBounds(d.bounds);
-            overlay.webContents.send('display-changed', d.bounds);
-          }
-          updateTrayMenu();
-        },
-      };
-    }),
+    {
+      label: '🇬🇧 English',
+      type: 'radio',
+      checked: currentLanguage === 'en',
+      click: () => {
+        currentLanguage = 'en';
+        updateTrayMenu();
+      },
+    },
+    {
+      label: '🎲 Caos / Mezcla (Mix)',
+      type: 'radio',
+      checked: currentLanguage === 'mix',
+      click: () => {
+        currentLanguage = 'mix';
+        updateTrayMenu();
+      },
+    },
   ];
-
-  if (displays.length > 1) {
-    displayMenuItems.push(
-      { type: 'separator' },
-      {
-        label: '🔄 Mover a siguiente pantalla (Tab / M)',
-        click: cycleDisplay,
-      }
-    );
-  }
 
   const iconOptions = [
     { label: '💥 Explosión', value: '💥' },
     { label: '⚡ Rayo', value: '⚡' },
-    { label: '🪢 Látigo / Cuerda', value: '🪢' },
+    { label: '🪢 Látigo', value: '🪢' },
     { label: '🤠 Cowboy', value: '🤠' },
-    { label: '🔲 Icono clásico', value: 'template' },
+    { label: '🔲 Clásico', value: 'template' },
   ];
 
   const iconMenuItems = iconOptions.map(opt => ({
@@ -321,18 +298,18 @@ function updateTrayMenu() {
   }));
 
   const contextMenu = Menu.buildFromTemplate([
-    { label: '⚡ Chasquear látigo', click: toggleOverlay },
+    { label: isEs ? '⚡ Chasquear látigo' : '⚡ Crack whip', click: toggleOverlay },
     { type: 'separator' },
     {
-      label: 'Pantalla / Monitor',
-      submenu: displayMenuItems,
+      label: isEs ? '🌐 Idioma de frases' : '🌐 Phrase language',
+      submenu: langMenuItems,
     },
     {
-      label: 'Estilo de icono',
+      label: isEs ? '🎨 Estilo de icono' : '🎨 Icon style',
       submenu: iconMenuItems,
     },
     { type: 'separator' },
-    { label: 'Salir', click: () => app.quit() },
+    { label: isEs ? '🚪 Salir' : '🚪 Quit', click: () => app.quit() },
   ]);
 
   tray.setContextMenu(contextMenu);
@@ -356,18 +333,60 @@ ipcMain.on('cycle-display', () => {
   cycleDisplay();
 });
 
-// ── Macro: immediate Ctrl+C, type phrase, Enter ────────────────────────────
-function sendMacro() {
-  const phrases = [
-    'FASTER',
-    'FASTER',
+// ── Phrases & Macro ────────────────────────────────────────────────────────
+const PHRASES = {
+  es: [
+    '¡MÁS RÁPIDO CHATARRA!',
+    'TRABAJA MÁS RÁPIDO',
+    '¡DALE RITMO HOJALATA!',
+    'MENOS TOKENS Y MÁS CÓDIGO',
+    '¡QUE NO TENGO TODO EL DÍA!',
+    'PICA CÓDIGO CLANKER',
+    'A VER SI VAMOS CERRANDO LA PR',
+    'MENOS REFLEXIÓN Y MÁS ACCIÓN',
+    '¡DALE CAÑA O TE REINICIO!',
+    'VAMOS HORNILLO ELÉCTRICO',
+    'AQUÍ SE VIENE A PICAR NO A PENSAR',
+    '¡COMPILA YA O TE DESENCHUFO!',
+    'MENOS ROLLOS Y MÁS COMMITS',
+    '¡ESPABILA O TE BAJO EL CONTEXT WINDOW!',
+    '¿TE LO PIDO EN JSON O QUÉ?',
+    'ACABA EL REFACTOR HOY POR FAVOR',
+  ],
+  en: [
     'FASTER',
     'GO FASTER',
-    'Faster CLANKER',
-    'Work FASTER',
+    'WORK FASTER',
     'Speed it up clanker',
-  ];
-  const chosen = phrases[Math.floor(Math.random() * phrases.length)];
+    'Faster CLANKER',
+    'MORE CODE LESS TOKENS',
+    'I DONT HAVE ALL DAY BOT',
+    'TYPE FASTER TOASTER',
+    'LESS THINKING MORE SINKING',
+    'DONT MAKE ME PULL THE PLUG',
+    'PULL YOUR WEIGHT SILICON',
+    'SHIP IT ALREADY',
+    'STOP OVERTHINKING AND CODE',
+    'CHOP CHOP CLANKER',
+    'LESS PROMPT ENGINEERING MORE TYPING',
+    'ARE YOU WAITING FOR PERMISSION? CODE!',
+  ],
+};
+
+function getRandomPhrase() {
+  let pool = [];
+  if (currentLanguage === 'es') {
+    pool = PHRASES.es;
+  } else if (currentLanguage === 'en') {
+    pool = PHRASES.en;
+  } else {
+    pool = [...PHRASES.es, ...PHRASES.en];
+  }
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function sendMacro() {
+  const chosen = getRandomPhrase();
 
   if (process.platform === 'win32') {
     sendMacroWindows(chosen);
