@@ -1,0 +1,20 @@
+README.md
+  h_6fb1b01c3fe550 27-28,30,32-33
+main.js
+  h_6fb1b01c3fe550 33,36-96,169-170,173,306-332,366,370-371,386,397-411,417-421,426-434,442-447,594
+overlay.html
+  h_6fb1b01c3fe550 88-95,98-130,410-411,413-415,417-431,434-445,467-474,476-506,509,512,516-541,546-559,561-563,565-588
+preload.js
+  h_6fb1b01c3fe550 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "65c6a8be8be47fd70e26f21a7262e3b626744d91",
+  "prompts": {},
+  "humans": {
+    "h_6fb1b01c3fe550": {
+      "author": "Jordi Luis Fernández Fernández <jordilff@ext.inditex.com>"
+    }
+  }
+}
