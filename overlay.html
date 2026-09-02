@@ -91,6 +91,16 @@ document.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.cli
 document.addEventListener('mousedown', () => {
   if (whip && !dropping) dropping = true;
 });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' || e.key === ' ') {
+    if (whip && !dropping) dropping = true;
+  } else if (e.key === 'Tab' || e.key === 'm' || e.key === 'M') {
+    e.preventDefault();
+    if (window.bridge && window.bridge.cycleDisplay) {
+      window.bridge.cycleDisplay();
+    }
+  }
+});
 
 // ── Whip creation ───────────────────────────────────────────────────────────
 function spawnWhip(mx, my) {
@@ -436,13 +446,21 @@ function loop() {
 loop();
 
 // ── IPC from main process ───────────────────────────────────────────────────
-window.bridge.onSpawnWhip(() => {
+window.bridge.onSpawnWhip((data) => {
+  if (data && typeof data.x === 'number' && typeof data.y === 'number') {
+    mouseX = data.x;
+    mouseY = data.y;
+  }
   whip = spawnWhip(mouseX || W / 2, mouseY || H / 2);
   dropping = false;
   prevMouseX = mouseX;
   prevMouseY = mouseY;
   handleAngle = P.baseTargetAngle;
   handleAngVel = 0;
+});
+
+window.bridge.onDisplayChanged(() => {
+  resize();
 });
 
 window.bridge.onDropWhip(() => {

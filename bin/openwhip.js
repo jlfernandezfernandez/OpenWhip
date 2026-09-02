@@ -12,8 +12,12 @@ let electronBinary;
 try {
   electronBinary = require('electron');
 } catch (e) {
-  console.error('Could not load Electron. Try: npm install -g openwhip');
-  process.exit(1);
+  try {
+    electronBinary = require(path.join(__dirname, '..', 'node_modules', 'electron'));
+  } catch (e2) {
+    console.error('Could not load Electron. Try: npm install -g openwhip');
+    process.exit(1);
+  }
 }
 
 const appPath = path.resolve(__dirname, '..');
