@@ -1,4 +1,14 @@
-const { app, BrowserWindow, Tray, Menu, ipcMain, nativeImage, screen, globalShortcut } = require('electron');
+const {
+  app,
+  BrowserWindow,
+  Tray,
+  Menu,
+  ipcMain,
+  nativeImage,
+  screen,
+  globalShortcut,
+  systemPreferences,
+} = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { execFile } = require('child_process');
@@ -49,6 +59,17 @@ function refocusPreviousApp() {
       keybd_event(VK_TAB, 0, 0, 0);
       keybd_event(VK_TAB, 0, KEYUP, 0);
       keybd_event(VK_MENU, 0, KEYUP, 0);
+    } else if (process.platform === 'darwin') {
+      const script = [
+        'tell application "System Events"',
+        '  key down command',
+        '  key code 48',
+        '  key up command',
+        'end tell',
+      ].join('\n');
+      execFile('osascript', ['-e', script], err => {
+        if (err) console.warn('Could not restore the previous app:', err.message);
+      });
     } else if (process.platform === 'linux') {
       execFile('xdotool', ['key', '--clearmodifiers', 'alt+Tab'], err => {
         if (err) {
@@ -201,6 +222,9 @@ function toggleOverlay({ restoreFocus = false } = {}) {
     return;
   }
 
+  // macOS menu-bar apps do not always take focus. Only Cmd+Tab when they did;
+  // otherwise the foreground app (for example Teams) is already the target.
+  const shouldRestoreFocus = restoreFocus && (process.platform !== 'darwin' || app.isActive());
   const target = getTargetDisplay();
   activeDisplayId = target.id;
 
@@ -219,10 +243,10 @@ function toggleOverlay({ restoreFocus = false } = {}) {
 
   if (overlayReady) {
     overlay.webContents.send('spawn-whip', { x: relX, y: relY });
-    if (restoreFocus) refocusPreviousApp();
+    if (shouldRestoreFocus) refocusPreviousApp();
   } else {
     spawnQueued = true;
-    restoreFocusQueued = restoreFocus;
+    restoreFocusQueued = shouldRestoreFocus;
   }
 }
 
@@ -358,7 +382,10 @@ function sendMacroLinux(text) {
 
 // ── App lifecycle ───────────────────────────────────────────────────────────
 app.whenReady().then(() => {
-  if (process.platform === 'darwin') app.setActivationPolicy('accessory');
+  if (process.platform === 'darwin') {
+    app.setActivationPolicy('accessory');
+    systemPreferences.isTrustedAccessibilityClient(true);
+  }
   tray = new Tray(getTrayIcon());
   updateTrayMenu();
   tray.on('click', () => toggleOverlay({ restoreFocus: true }));
