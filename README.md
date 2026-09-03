@@ -20,6 +20,12 @@ On macOS, allow OpenWhip under **System Settings → Privacy & Security → Acce
 sudo apt install xdotool
 ```
 
+## Uninstall
+
+- macOS: quit OpenWhip and move it from Applications to the Trash. You can also remove it from the Accessibility list in System Settings.
+- Windows: open **Settings → Apps → Installed apps**, select OpenWhip, and choose **Uninstall**.
+- Linux: delete the `.AppImage`, or run `sudo apt remove openwhip` if you installed the `.deb` package.
+
 ## Controls
 
 - Click the menu bar or tray icon, or press `Option+Shift+W` / `Alt+Shift+W`, to summon the whip on the display under your pointer.

@@ -66,10 +66,15 @@ const P = {
   arcHeight:      185,    // how high the arc goes above mouse
 };
 
+const SEGMENT_LENGTHS = Array.from({ length: P.segments - 1 }, (_, i) => {
+  const t = i / (P.segments - 1);
+  return P.segmentLength * (1 - t * (1 - P.taper));
+});
+
 // ══════════════════════════════════════════════════════════════════════════════
 
 const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
+const ctx = canvas.getContext('2d', { alpha: true, desynchronized: true });
 let W, H;
 
 function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
@@ -137,8 +142,7 @@ function spawnWhip(mx, my) {
 }
 
 function segLen(i) {
-  const t = i / (P.segments - 1);
-  return P.segmentLength * (1 - t * (1 - P.taper));
+  return SEGMENT_LENGTHS[i];
 }
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
@@ -168,19 +172,19 @@ function catmullPoint(pts, i) {
  * Cubic Bézier from p1→p2 matching uniform Catmull–Rom through p0,p1,p2,p3.
  * Control points: C1 = p1 + (p2-p0)/6, C2 = p2 - (p3-p1)/6.
  */
-function whipSegmentBezier(pts, i) {
+function traceWhipSegment(context, pts, i) {
   const p0 = catmullPoint(pts, i - 1);
   const p1 = pts[i];
   const p2 = pts[i + 1];
   const p3 = catmullPoint(pts, i + 2);
-  return {
-    cp1x: p1.x + (p2.x - p0.x) / 6,
-    cp1y: p1.y + (p2.y - p0.y) / 6,
-    cp2x: p2.x - (p3.x - p1.x) / 6,
-    cp2y: p2.y - (p3.y - p1.y) / 6,
-    x2: p2.x,
-    y2: p2.y,
-  };
+  context.bezierCurveTo(
+    p1.x + (p2.x - p0.x) / 6,
+    p1.y + (p2.y - p0.y) / 6,
+    p2.x - (p3.x - p1.x) / 6,
+    p2.y - (p3.y - p1.y) / 6,
+    p2.x,
+    p2.y
+  );
 }
 const wrapPi = a => {
   while (a > Math.PI) a -= Math.PI * 2;
@@ -415,8 +419,7 @@ function draw() {
     ctx.beginPath();
     ctx.moveTo(whip[0].x, whip[0].y);
     for (let i = 0; i < whip.length - 1; i++) {
-      const { cp1x, cp1y, cp2x, cp2y, x2, y2 } = whipSegmentBezier(whip, i);
-      ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x2, y2);
+      traceWhipSegment(ctx, whip, i);
     }
     ctx.stroke();
 
@@ -425,8 +428,7 @@ function draw() {
       ctx.beginPath();
       ctx.moveTo(whip[0].x, whip[0].y);
       for (let i = 0; i < thickLinks; i++) {
-        const { cp1x, cp1y, cp2x, cp2y, x2, y2 } = whipSegmentBezier(whip, i);
-        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x2, y2);
+        traceWhipSegment(ctx, whip, i);
       }
       ctx.lineWidth = P.lineWidthHandle + P.handleExtraWidth + P.outlineWidth * 2;
       ctx.stroke();
@@ -438,10 +440,9 @@ function draw() {
       const t = i / Math.max(1, whip.length - 2);
       const extra = i < P.handleThickSegments ? P.handleExtraWidth : 0;
       ctx.lineWidth = lerp(P.lineWidthHandle, P.lineWidthTip, t) + extra;
-      const { cp1x, cp1y, cp2x, cp2y, x2, y2 } = whipSegmentBezier(whip, i);
       ctx.beginPath();
       ctx.moveTo(whip[i].x, whip[i].y);
-      ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x2, y2);
+      traceWhipSegment(ctx, whip, i);
       ctx.stroke();
     }
 
@@ -449,10 +450,9 @@ function draw() {
     if (thickLinks > 0 && !dropping) {
       ctx.strokeStyle = '#8b6b16';
       ctx.lineWidth = P.lineWidthHandle + 2;
-      const { cp1x, cp1y, cp2x, cp2y, x2, y2 } = whipSegmentBezier(whip, 0);
       ctx.beginPath();
       ctx.moveTo(whip[0].x, whip[0].y);
-      ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x2, y2);
+      traceWhipSegment(ctx, whip, 0);
       ctx.stroke();
     }
   }
