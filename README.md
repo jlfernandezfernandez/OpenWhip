@@ -23,7 +23,7 @@ sudo apt install xdotool  # X11
 sudo apt install wtype    # Wayland
 ```
 
-Wayland compositors without the virtual-keyboard protocol can use `ydotool` instead, with its `ydotoold` service configured. The global shortcut uses the standard desktop portal on Wayland.
+Wayland compositors without the virtual-keyboard protocol can use `ydotool` instead, with its `ydotoold` service configured.
 
 ## Uninstall
 
@@ -33,10 +33,9 @@ Wayland compositors without the virtual-keyboard protocol can use `ydotool` inst
 
 ## Controls
 
-- Click the menu bar or tray icon, or press `Option+Shift+W` / `Alt+Shift+W`, to summon the whip on the display under your pointer.
+- Click the menu bar or tray icon to summon the whip on the display under your pointer.
 - Move the pointer to control it.
-- Click, press `Escape`, or press `Space` to drop it.
-- Press `Tab` or `M` to move it to the next display.
+- Click to drop it.
 - Right-click the icon to crack the whip or quit OpenWhip.
 
 The renderer sleeps while the whip is hidden, so idle CPU use stays at zero.

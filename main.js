@@ -6,7 +6,6 @@ const {
   ipcMain,
   nativeImage,
   screen,
-  globalShortcut,
 } = require('electron');
 const path = require('path');
 const fs = require('fs');
@@ -84,21 +83,6 @@ function getTargetDisplay() {
   return screen.getDisplayNearestPoint(cursorPos);
 }
 
-function cycleDisplay() {
-  const displays = screen.getAllDisplays();
-  if (displays.length <= 1) return;
-
-  const current = getTargetDisplay();
-  const currentIndex = displays.findIndex(d => d.id === current.id);
-  const nextDisplay = displays[(currentIndex + 1) % displays.length];
-  activeDisplayId = nextDisplay.id;
-
-  if (overlay && overlay.isVisible()) {
-    overlay.setBounds(nextDisplay.bounds);
-    overlay.webContents.send('display-changed', nextDisplay.bounds);
-  }
-}
-
 function startCursorTracking() {
   stopCursorTracking();
   cursorTrackTimer = setInterval(() => {
@@ -128,7 +112,6 @@ function quitApplication() {
   isQuitting = true;
 
   stopCursorTracking();
-  globalShortcut.unregisterAll();
 
   if (overlay && !overlay.isDestroyed()) {
     overlay.destroy();
@@ -229,7 +212,7 @@ function updateTrayMenu() {
   if (!tray) return;
 
   const contextMenu = Menu.buildFromTemplate([
-    { label: 'Crack whip', accelerator: 'Alt+Shift+W', click: toggleOverlay },
+    { label: 'Crack whip', click: toggleOverlay },
     { type: 'separator' },
     { label: 'Quit OpenWhip', click: quitApplication },
   ]);
@@ -250,10 +233,6 @@ ipcMain.on('whip-crack', () => {
 ipcMain.on('hide-overlay', () => {
   if (overlay) overlay.hide();
   stopCursorTracking();
-});
-
-ipcMain.on('cycle-display', () => {
-  cycleDisplay();
 });
 
 // ── Phrases & Macro ────────────────────────────────────────────────────────
@@ -374,15 +353,6 @@ app.whenReady().then(() => {
   tray = new Tray(getTrayIcon());
   updateTrayMenu();
   tray.on('click', toggleOverlay);
-
-  // Global hotkey to crack/toggle whip from anywhere
-  try {
-    globalShortcut.register('Alt+Shift+W', () => {
-      toggleOverlay();
-    });
-  } catch (e) {
-    console.warn('Could not register global hotkey:', e?.message || e);
-  }
 });
 
 app.on('second-instance', () => {
@@ -391,7 +361,7 @@ app.on('second-instance', () => {
 
 app.on('will-quit', () => {
   stopCursorTracking();
-  globalShortcut.unregisterAll();
 });
 
-app.on('window-all-closed', e => e.preventDefault());
+// Tray-only app: a listener with no default action keeps the process alive
+app.on('window-all-closed', () => {});
