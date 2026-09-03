@@ -38,6 +38,7 @@ let overlayReady = false;
 let spawnQueued = false;
 let activeDisplayId = null;
 let cursorTrackTimer = null;
+let isQuitting = false;
 
 // ── Keyboard constants ──
 const VK_RETURN  = 0x0D;
@@ -120,6 +121,25 @@ function stopCursorTracking() {
     clearInterval(cursorTrackTimer);
     cursorTrackTimer = null;
   }
+}
+
+function quitApplication() {
+  if (isQuitting) return;
+  isQuitting = true;
+
+  stopCursorTracking();
+  globalShortcut.unregisterAll();
+
+  if (overlay && !overlay.isDestroyed()) {
+    overlay.destroy();
+  }
+  if (tray && !tray.isDestroyed()) {
+    tray.destroy();
+  }
+
+  // A tray-only app has no normal window lifecycle to finish. Exit explicitly
+  // after releasing its native resources so Quit always terminates the process.
+  app.exit(0);
 }
 
 // ── Overlay window ──────────────────────────────────────────────────────────
@@ -211,7 +231,7 @@ function updateTrayMenu() {
   const contextMenu = Menu.buildFromTemplate([
     { label: 'Crack whip', accelerator: 'Alt+Shift+W', click: toggleOverlay },
     { type: 'separator' },
-    { label: 'Quit OpenWhip', role: 'quit' },
+    { label: 'Quit OpenWhip', click: quitApplication },
   ]);
 
   tray.setContextMenu(contextMenu);
@@ -339,6 +359,7 @@ app.on('second-instance', () => {
 });
 
 app.on('will-quit', () => {
+  stopCursorTracking();
   globalShortcut.unregisterAll();
 });
 

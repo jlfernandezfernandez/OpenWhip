@@ -53,7 +53,7 @@ npm run dist:win
 npm run dist:linux
 ```
 
-Pushing a version tag such as `v1.2.2` builds all platform installers and publishes a GitHub release automatically.
+Pushing a version tag such as `v1.2.4` builds all platform installers and publishes a GitHub release automatically.
 
 ## License
 

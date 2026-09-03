@@ -1,7 +1,7 @@
 {
   "name": "openwhip",
   "desktopName": "com.openwhip.app",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "A fast, focused desktop whip for slow coding agents",
   "author": {
     "name": "OpenWhip contributors",
