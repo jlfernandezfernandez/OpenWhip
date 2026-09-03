@@ -24,7 +24,7 @@ const P = {
   gravity:        1.2,   // normal gravity
   dropGravity:    0.95,    // gravity when dropping/despawning
   damping:        0.96,  // velocity retention per frame (1 = no loss)
-  constraintIters:20,     // higher = stiffer chain
+  constraintIters:12,     // enough stiffness without overworking the renderer
   maxStretchRatio: 1.2,  // hard cap for per-link stretch during fast whips
 
   // Dynamic handle aim (target angle + restoring spring, not static lock)
@@ -85,18 +85,11 @@ let whipSpawnTime = 0;
 let handleAngle = P.baseTargetAngle;
 let handleAngVel = 0;
 
-// ── Rage Mode & Visual Effects State ────────────────────────────────────────
-let recentCracks = [];
-let rageEndTime = 0;
-let rageLevel = 0;
-let particles = [];
-let floatingTexts = [];
-let shockwaves = [];
-let screenShake = 0;
+// ── Animation state ──
 let animFrameId = null;
 let isLoopRunning = false;
 
-// Preloaded Audio Pool for zero-latency playback
+// Reuse decoded audio elements instead of allocating one on every crack.
 const WHIP_CRACK_SOUNDS = ['sounds/A.mp3', 'sounds/B.mp3', 'sounds/C.mp3', 'sounds/D.mp3', 'sounds/E.mp3'];
 const audioPool = WHIP_CRACK_SOUNDS.map(src => {
   const audio = new Audio(src);
@@ -106,54 +99,10 @@ const audioPool = WHIP_CRACK_SOUNDS.map(src => {
 
 function playCrackSound() {
   if (!audioPool.length) return;
-  const audio = audioPool[Math.floor(Math.random() * audioPool.length)];
+  const idleAudio = audioPool.find(audio => audio.paused || audio.ended);
+  const audio = idleAudio || audioPool[Math.floor(Math.random() * audioPool.length)];
   audio.currentTime = 0;
   audio.play().catch(() => {});
-}
-
-function spawnSparks(x, y, count, isRage = false) {
-  for (let i = 0; i < count; i++) {
-    const angle = Math.random() * Math.PI * 2;
-    const speed = (Math.random() * 6 + 2) * (isRage ? 1.6 : 1);
-    particles.push({
-      x,
-      y,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed - (isRage ? 2 : 0.5),
-      size: Math.random() * (isRage ? 4.2 : 2.5) + 1.5,
-      alpha: 1,
-      decay: Math.random() * 0.035 + 0.02,
-      color: isRage
-        ? (Math.random() > 0.3 ? '#ff2a00' : (Math.random() > 0.5 ? '#ffaa00' : '#ffffff'))
-        : (Math.random() > 0.4 ? '#ffea70' : '#ffffff'),
-    });
-  }
-}
-
-function spawnShockwave(x, y, isRage = false) {
-  shockwaves.push({
-    x,
-    y,
-    radius: 6,
-    maxRadius: isRage ? 55 : 35,
-    alpha: 0.9,
-    decay: isRage ? 0.045 : 0.06,
-    color: isRage ? '#ff3b00' : '#ffffff',
-    lineWidth: isRage ? 3 : 2,
-  });
-}
-
-function spawnFloatingText(text, x, y, color = '#ff3300', size = 26) {
-  floatingTexts.push({
-    text,
-    x: clamp(x, 100, W - 100),
-    y: clamp(y, 60, H - 60),
-    vy: -2.0,
-    alpha: 1,
-    decay: 0.018,
-    color,
-    size,
-  });
 }
 
 document.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
@@ -238,13 +187,6 @@ const wrapPi = a => {
   while (a < -Math.PI) a += Math.PI * 2;
   return a;
 };
-
-function playCrackSound() {
-  if (!WHIP_CRACK_SOUNDS.length) return;
-  const src = WHIP_CRACK_SOUNDS[Math.floor(Math.random() * WHIP_CRACK_SOUNDS.length)];
-  const a = new Audio(src);
-  a.play().catch(() => {});
-}
 
 function updateHandleAim() {
   if (dropping) return;
@@ -436,42 +378,12 @@ function update() {
   const tip = whip[whip.length - 1];
   const tipVel = Math.hypot(tip.x - tip.px, tip.y - tip.py);
   const now = Date.now();
-  const isRage = now < rageEndTime;
 
-  if (!dropping && tipVel > (isRage ? P.crackSpeed * 0.82 : P.crackSpeed)) {
-    const cd = isRage ? P.crackCooldownMs * 0.75 : P.crackCooldownMs;
-    if (now - whipSpawnTime >= P.firstCrackGraceMs && now - lastCrackTime > cd) {
+  if (!dropping && tipVel > P.crackSpeed) {
+    if (now - whipSpawnTime >= P.firstCrackGraceMs && now - lastCrackTime > P.crackCooldownMs) {
       lastCrackTime = now;
-      recentCracks.push(now);
-      recentCracks = recentCracks.filter(t => now - t < 3500);
-
-      const wasRage = now < rageEndTime;
-      if (recentCracks.length >= 3) {
-        rageEndTime = now + 4500;
-        rageLevel = recentCracks.length >= 5 ? 2 : 1;
-        if (!wasRage) {
-          if (window.bridge && window.bridge.onRageEnter) {
-            window.bridge.onRageEnter();
-          }
-          spawnFloatingText('🔥 ¡MODO FURIA! 🔥', tip.x, tip.y - 45, '#ff2200', 32);
-        }
-      }
-
       playCrackSound();
       window.bridge.whipCrack();
-
-      const inRageNow = now < rageEndTime;
-      screenShake = inRageNow ? 6 : 3;
-      spawnSparks(tip.x, tip.y, inRageNow ? 28 : 12, inRageNow);
-      spawnShockwave(tip.x, tip.y, inRageNow);
-
-      if (inRageNow) {
-        const comboTexts = ['🔥 ¡PICA CÓDIGO!', '💥 ¡CRACK!', '⚡ ¡MÁS RÁPIDO!', '💀 ¡SIN PIEDAD!', '🚀 ¡A TOPE!'];
-        const combo = comboTexts[Math.floor(Math.random() * comboTexts.length)];
-        spawnFloatingText(combo, tip.x, tip.y - 25, '#ffcc00', 22);
-      } else {
-        spawnFloatingText('💥 ¡ZAS!', tip.x, tip.y - 20, '#ffffff', 20);
-      }
     }
   }
 
@@ -493,54 +405,12 @@ function draw() {
   ctx.fillStyle = `rgba(0,0,0,${P.bgAlpha})`;
   ctx.fillRect(0, 0, W, H);
 
-  ctx.save();
-  if (screenShake > 0) {
-    const shakeX = (Math.random() - 0.5) * screenShake;
-    const shakeY = (Math.random() - 0.5) * screenShake;
-    ctx.translate(shakeX, shakeY);
-    screenShake *= 0.85;
-    if (screenShake < 0.2) screenShake = 0;
-  }
-
-  const isRage = Date.now() < rageEndTime;
-
-  // Embers trailing from the whip in Rage Mode
-  if (isRage && whip && !dropping) {
-    for (let i = 1; i < whip.length; i += 3) {
-      if (Math.random() > 0.45) {
-        particles.push({
-          x: whip[i].x + (Math.random() - 0.5) * 8,
-          y: whip[i].y + (Math.random() - 0.5) * 8,
-          vx: (Math.random() - 0.5) * 1.5,
-          vy: -Math.random() * 2 - 1,
-          size: Math.random() * 3.5 + 1,
-          alpha: 0.9,
-          decay: 0.035,
-          color: Math.random() > 0.5 ? '#ff4400' : '#ffaa00',
-        });
-      }
-    }
-  }
-
   if (whip && whip.length >= 2) {
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
-    // Layer 1: Outer glow / halo (fast layered stroke without shadowBlur lag)
-    if (isRage) {
-      ctx.strokeStyle = 'rgba(255, 30, 0, 0.45)';
-      ctx.lineWidth = P.lineWidthTip + P.outlineWidth * 4;
-      ctx.beginPath();
-      ctx.moveTo(whip[0].x, whip[0].y);
-      for (let i = 0; i < whip.length - 1; i++) {
-        const { cp1x, cp1y, cp2x, cp2y, x2, y2 } = whipSegmentBezier(whip, i);
-        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x2, y2);
-      }
-      ctx.stroke();
-    }
-
-    // Layer 2: White/Neon outline
-    ctx.strokeStyle = isRage ? '#ff2200' : '#ffffff';
+    // White outline keeps the whip legible on light and dark backgrounds.
+    ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = P.lineWidthTip + P.outlineWidth * 2;
     ctx.beginPath();
     ctx.moveTo(whip[0].x, whip[0].y);
@@ -562,8 +432,8 @@ function draw() {
       ctx.stroke();
     }
 
-    // Layer 3: Inner whip cord
-    ctx.strokeStyle = isRage ? '#ffeb3b' : '#1a1a1a';
+    // Inner whip cord.
+    ctx.strokeStyle = '#1a1a1a';
     for (let i = 0; i < whip.length - 1; i++) {
       const t = i / Math.max(1, whip.length - 2);
       const extra = i < P.handleThickSegments ? P.handleExtraWidth : 0;
@@ -575,9 +445,9 @@ function draw() {
       ctx.stroke();
     }
 
-    // Handle Accent Wrap (Leather/Gold detail at the base)
+    // Subtle leather accent at the handle.
     if (thickLinks > 0 && !dropping) {
-      ctx.strokeStyle = isRage ? '#ffffff' : '#b8860b';
+      ctx.strokeStyle = '#8b6b16';
       ctx.lineWidth = P.lineWidthHandle + 2;
       const { cp1x, cp1y, cp2x, cp2y, x2, y2 } = whipSegmentBezier(whip, 0);
       ctx.beginPath();
@@ -587,67 +457,6 @@ function draw() {
     }
   }
 
-  // Draw expanding shockwaves
-  for (let i = shockwaves.length - 1; i >= 0; i--) {
-    const sw = shockwaves[i];
-    sw.radius += (sw.maxRadius - sw.radius) * 0.28 + 1.2;
-    sw.alpha -= sw.decay;
-    if (sw.alpha <= 0 || sw.radius >= sw.maxRadius) {
-      shockwaves.splice(i, 1);
-      continue;
-    }
-    ctx.save();
-    ctx.globalAlpha = sw.alpha;
-    ctx.strokeStyle = sw.color;
-    ctx.lineWidth = sw.lineWidth;
-    ctx.beginPath();
-    ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  // Draw particle sparks
-  for (let i = particles.length - 1; i >= 0; i--) {
-    const p = particles[i];
-    p.x += p.vx;
-    p.y += p.vy;
-    p.alpha -= p.decay;
-    if (p.alpha <= 0) {
-      particles.splice(i, 1);
-      continue;
-    }
-    ctx.save();
-    ctx.globalAlpha = p.alpha;
-    ctx.fillStyle = p.color;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  }
-
-  // Draw floating combo/rage text
-  for (let i = floatingTexts.length - 1; i >= 0; i--) {
-    const ft = floatingTexts[i];
-    ft.y += ft.vy;
-    ft.alpha -= ft.decay;
-    if (ft.alpha <= 0) {
-      floatingTexts.splice(i, 1);
-      continue;
-    }
-    ctx.save();
-    ctx.globalAlpha = ft.alpha;
-    ctx.font = `bold ${ft.size}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.strokeStyle = '#000000';
-    ctx.lineWidth = 4;
-    ctx.strokeText(ft.text, ft.x, ft.y);
-    ctx.fillStyle = ft.color;
-    ctx.fillText(ft.text, ft.x, ft.y);
-    ctx.restore();
-  }
-
-  ctx.restore();
 }
 
 // ── Main loop (Optimized to sleep when idle: 0% CPU) ────────────────────────
@@ -672,8 +481,8 @@ function loop() {
   update();
   draw();
 
-  // If whip is gone and all particles/texts/shockwaves finished, suspend loop to conserve CPU
-  if (!whip && particles.length === 0 && floatingTexts.length === 0 && shockwaves.length === 0 && screenShake === 0) {
+  // Suspend rendering completely while the overlay is idle.
+  if (!whip) {
     stopLoop();
     return;
   }

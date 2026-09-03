@@ -2,3 +2,5 @@ node_modules/
 dist/
 out/
 *.tgz
+*.log
+.DS_Store

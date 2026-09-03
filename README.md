@@ -2,16 +2,19 @@
 
 ![Whip divider](assets/divider.png)
 
-Sometimes claude code is going too shlow, and you must whip him into shape..
+A tiny desktop utility for when your coding agent needs a little encouragement.
 
-## Install + run
+OpenWhip lives in the menu bar or system tray. Summon the whip, crack it, and the app interrupts the active terminal with one of the short English messages from the original release.
 
-```bash
-npm install -g openwhip
-openwhip
-```
+## Install
 
-windows and mac supported out of the box, but Linux is a special snowflake so you need to install `xdotool` for keyboard automation
+The easiest option is to download the installer for your platform from [GitHub Releases](https://github.com/jlfernandezfernandez/OpenWhip/releases):
+
+- macOS: open the `.dmg` and drag OpenWhip to Applications.
+- Windows: run the `.exe` installer.
+- Linux: use the `.AppImage` or install the `.deb` package.
+
+On macOS, allow OpenWhip under **System Settings → Privacy & Security → Accessibility** so it can send `Ctrl-C` and type into the active terminal. Linux users need `xdotool`:
 
 ```bash
 sudo apt install xdotool
@@ -19,34 +22,31 @@ sudo apt install xdotool
 
 ## Controls
 
-- **Click tray icon** or press **`Option+Shift+W` / `Alt+Shift+W`**: spawn whip on whichever screen your mouse is on.
-- **Multi-monitor Auto**: seamlessly follow cursor across all connected screens.
-- **Press `Tab` or `M`**: cycle whip to next monitor.
-- **Click / `Escape` / `Space`**: drop whip.
-- **Whip him** 😩💢: sends an interrupt (`Ctrl-C`) and an encouraging message!
-- **⚡ Zero Idle CPU**: automatic sleep lifecycle (0% CPU usage when idle).
-- **🔥 Rage Mode**: whip 3+ times in rapid succession to unleash a flaming whip with flying embers, sparks, and screenshake!
-- **📊 Stats & Ranks**: tracks total whip count, daily count, and unlocks titles from *Whip Intern* to *Silicon Tyrant*.
-- **Right-click tray**:
-  - 📊 **Stats & Rank** display (total whips, today, rage activations)
-  - 🌐 **Language**: 🇪🇸 Español / 🇬🇧 English / 🎲 Mix
-  - 🎨 **Icon style**: 💥 / 🔥 / ⚡ / 🪢 / 🤠 / 😈 / 🦾
-  - ⚙️ **Reset stats**
-  - 🚪 **Quit**
+- Click the menu bar or tray icon, or press `Option+Shift+W` / `Alt+Shift+W`, to summon the whip on the display under your pointer.
+- Move the pointer to control it.
+- Click, press `Escape`, or press `Space` to drop it.
+- Press `Tab` or `M` to move it to the next display.
+- Right-click the icon to crack the whip or quit OpenWhip.
 
-## Roadmap
+The renderer sleeps while the whip is hidden, so idle CPU use stays at zero.
 
-- [x] Initial release! 🥳
-- [x] Cease and desist letter from Anthropic
-- [ ] Crypto miner
-- [ ] Logs of how many times you whipped claude so when the robots come we can order people nicely for them
-- [ ] Updated whip physics
+## Development
 
-## Ecosystem
+```bash
+npm install
+npm start
+```
 
-The OFFICAL openwhip ecosystem token. 
+Create a local installer with one of these commands:
 
-Contract address: BRyUZbJkm9Pty4FUmTrBGno7U4Ga8TWzcKJJRLCBpump
+```bash
+npm run dist:mac
+npm run dist:win
+npm run dist:linux
+```
 
-Stay tuned for updates on X! 👀
-https://x.com/blended_jpeg
+Pushing a version tag such as `v1.2.0` builds all platform installers and publishes a GitHub release automatically.
+
+## License
+
+MIT

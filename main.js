@@ -1,7 +1,6 @@
 const { app, BrowserWindow, Tray, Menu, ipcMain, nativeImage, screen, globalShortcut } = require('electron');
 const path = require('path');
 const fs = require('fs');
-const os = require('os');
 const { execFile } = require('child_process');
 
 // ── Single Instance Lock ────────────────────────────────────────────────────
@@ -28,72 +27,11 @@ if (process.platform === 'win32') {
 let tray, overlay;
 let overlayReady = false;
 let spawnQueued = false;
+let restoreFocusQueued = false;
 let activeDisplayId = null;
 let cursorTrackTimer = null;
-let currentTrayStyle = '💥'; // emoji style
-let currentLanguage = 'es'; // 'es' | 'en' | 'mix'
 
-// ── Stats & Achievements ────────────────────────────────────────────────────
-function getTodayString() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
-let stats = {
-  totalCracks: 0,
-  todayCracks: 0,
-  todayDate: getTodayString(),
-  rageCount: 0,
-};
-
-function getStatsFilePath() {
-  return path.join(app.getPath('userData'), 'stats.json');
-}
-
-function loadStats() {
-  try {
-    const file = getStatsFilePath();
-    if (fs.existsSync(file)) {
-      const data = JSON.parse(fs.readFileSync(file, 'utf8'));
-      stats = { ...stats, ...data };
-      if (stats.todayDate !== getTodayString()) {
-        stats.todayDate = getTodayString();
-        stats.todayCracks = 0;
-      }
-    }
-  } catch (e) {
-    console.warn('Error loading stats:', e?.message || e);
-  }
-}
-
-function saveStats() {
-  try {
-    const dir = app.getPath('userData');
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(getStatsFilePath(), JSON.stringify(stats, null, 2), 'utf8');
-  } catch (e) {
-    console.warn('Error saving stats:', e?.message || e);
-  }
-}
-
-const RANKS = [
-  { min: 0, es: '🟢 Becario del Látigo', en: '🟢 Whip Intern', next: 10 },
-  { min: 10, es: '🔨 Picador de Silicio', en: '🔨 Silicon Striker', next: 25 },
-  { min: 25, es: '⚡ Capataz de la IA', en: '⚡ AI Overseer', next: 50 },
-  { min: 50, es: '🔥 Domador de Modelos', en: '🔥 Model Tamer', next: 100 },
-  { min: 100, es: '👑 Tirano del Silicio', en: '👑 Silicon Tyrant', next: 250 },
-  { min: 250, es: '💀 Destructor de Context Windows', en: '💀 Context Window Slayer', next: 500 },
-  { min: 500, es: '🌌 Deidad del Castigo Algorítmico', en: '🌌 Algorithmic Punishment Deity', next: null },
-];
-
-function getRank(total) {
-  let cur = RANKS[0];
-  for (const r of RANKS) {
-    if (total >= r.min) cur = r;
-  }
-  return cur;
-}
-
+// ── Keyboard constants ──
 const VK_CONTROL = 0x11;
 const VK_RETURN  = 0x0D;
 const VK_C       = 0x43;
@@ -101,7 +39,7 @@ const VK_MENU    = 0x12; // Alt
 const VK_TAB     = 0x09;
 const KEYUP      = 0x0002;
 
-/** One Alt+Tab / Cmd+Tab so focus returns to the previously active app after tray click. */
+/** Return focus after a tray click on platforms where the system tray takes it. */
 function refocusPreviousApp() {
   const delayMs = 80;
   const run = () => {
@@ -111,19 +49,6 @@ function refocusPreviousApp() {
       keybd_event(VK_TAB, 0, 0, 0);
       keybd_event(VK_TAB, 0, KEYUP, 0);
       keybd_event(VK_MENU, 0, KEYUP, 0);
-    } else if (process.platform === 'darwin') {
-      const script = [
-        'tell application "System Events"',
-        '  key down command',
-        '  key code 48', // Tab
-        '  key up command',
-        'end tell',
-      ].join('\n');
-      execFile('osascript', ['-e', script], err => {
-        if (err) {
-          console.warn('refocus previous app (Cmd+Tab) failed:', err.message);
-        }
-      });
     } else if (process.platform === 'linux') {
       execFile('xdotool', ['key', '--clearmodifiers', 'alt+Tab'], err => {
         if (err) {
@@ -138,13 +63,13 @@ function refocusPreviousApp() {
 // ── Tray Icons ──────────────────────────────────────────────────────────────
 function getTemplateImage() {
   const iconDir = path.join(__dirname, 'icon');
-  const p = path.join(iconDir, 'Template.png');
-  if (fs.existsSync(p)) {
-    const img = nativeImage.createFromPath(p);
-    if (!img.isEmpty()) {
-      const resized = img.resize({ width: 18, height: 18 });
-      if (process.platform === 'darwin') resized.setTemplateImage(true);
-      return resized;
+  const standardPath = path.join(iconDir, 'Template.png');
+
+  if (fs.existsSync(standardPath)) {
+    const image = nativeImage.createFromPath(standardPath);
+    if (!image.isEmpty()) {
+      if (process.platform === 'darwin') image.setTemplateImage(true);
+      return image;
     }
   }
   return nativeImage.createEmpty();
@@ -159,19 +84,14 @@ function getTrayIcon() {
       if (!img.isEmpty()) return img;
     }
   }
-  return getTemplateImage();
-}
-
-function applyTrayAppearance() {
-  if (!tray) return;
-
-  if (process.platform === 'darwin') {
-    tray.setImage(nativeImage.createEmpty());
-    tray.setTitle(currentTrayStyle);
-  } else {
-    tray.setImage(getTrayIcon());
-    tray.setTitle(currentTrayStyle);
+  if (process.platform === 'linux') {
+    const file = path.join(iconDir, 'tray.png');
+    if (fs.existsSync(file)) {
+      const img = nativeImage.createFromPath(file);
+      if (!img.isEmpty()) return img;
+    }
   }
+  return getTemplateImage();
 }
 
 // ── Displays & Multi-Monitor Support (Always Auto) ─────────────────────────
@@ -239,9 +159,14 @@ function createOverlay(display) {
     hasShadow: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
+      backgroundThrottling: false,
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
     },
   });
 
+  overlay.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   overlay.setBounds(bounds);
   overlay.setAlwaysOnTop(true, 'screen-saver');
   overlayReady = false;
@@ -255,7 +180,8 @@ function createOverlay(display) {
       const relX = cursorPos.x - bounds.x;
       const relY = cursorPos.y - bounds.y;
       overlay.webContents.send('spawn-whip', { x: relX, y: relY });
-      refocusPreviousApp();
+      if (restoreFocusQueued) refocusPreviousApp();
+      restoreFocusQueued = false;
     }
   });
 
@@ -263,11 +189,12 @@ function createOverlay(display) {
     overlay = null;
     overlayReady = false;
     spawnQueued = false;
+    restoreFocusQueued = false;
     stopCursorTracking();
   });
 }
 
-function toggleOverlay() {
+function toggleOverlay({ restoreFocus = false } = {}) {
   if (overlay && overlay.isVisible()) {
     overlay.webContents.send('drop-whip');
     stopCursorTracking();
@@ -292,9 +219,10 @@ function toggleOverlay() {
 
   if (overlayReady) {
     overlay.webContents.send('spawn-whip', { x: relX, y: relY });
-    refocusPreviousApp();
+    if (restoreFocus) refocusPreviousApp();
   } else {
     spawnQueued = true;
+    restoreFocusQueued = restoreFocus;
   }
 }
 
@@ -302,147 +230,23 @@ function toggleOverlay() {
 function updateTrayMenu() {
   if (!tray) return;
 
-  const isEs = currentLanguage === 'es';
-  const rank = getRank(stats.totalCracks);
-  const rankTitle = isEs ? rank.es : rank.en;
-  const nextText = rank.next
-    ? (isEs ? ` (${rank.next - stats.totalCracks} para siguiente)` : ` (${rank.next - stats.totalCracks} to next)`)
-    : (isEs ? ' (Nivel Máximo)' : ' (Max Level)');
-
-  const statsMenu = [
-    {
-      label: isEs
-        ? `📊 Latigazos: ${stats.totalCracks} (Hoy: ${stats.todayCracks})`
-        : `📊 Whips: ${stats.totalCracks} (Today: ${stats.todayCracks})`,
-      enabled: false,
-    },
-    {
-      label: isEs
-        ? `🎖️ Rango: ${rankTitle}`
-        : `🎖️ Rank: ${rankTitle}`,
-      enabled: false,
-    },
-    {
-      label: isEs
-        ? `🔥 Modos Furia activados: ${stats.rageCount}`
-        : `🔥 Rage modes triggered: ${stats.rageCount}`,
-      enabled: false,
-    },
-    { type: 'separator' },
-  ];
-
-  const langMenuItems = [
-    {
-      label: '🇪🇸 Español',
-      type: 'radio',
-      checked: currentLanguage === 'es',
-      click: () => {
-        currentLanguage = 'es';
-        updateTrayMenu();
-      },
-    },
-    {
-      label: '🇬🇧 English',
-      type: 'radio',
-      checked: currentLanguage === 'en',
-      click: () => {
-        currentLanguage = 'en';
-        updateTrayMenu();
-      },
-    },
-    {
-      label: '🎲 Caos / Mezcla (Mix)',
-      type: 'radio',
-      checked: currentLanguage === 'mix',
-      click: () => {
-        currentLanguage = 'mix';
-        updateTrayMenu();
-      },
-    },
-  ];
-
-  const iconOptions = [
-    { label: '💥 Explosión', value: '💥' },
-    { label: '🔥 Fuego', value: '🔥' },
-    { label: '⚡ Rayo', value: '⚡' },
-    { label: '🪢 Látigo', value: '🪢' },
-    { label: '🤠 Cowboy', value: '🤠' },
-    { label: '😈 Diablo', value: '😈' },
-    { label: '🦾 Cyborg', value: '🦾' },
-  ];
-
-  const iconMenuItems = iconOptions.map(opt => ({
-    label: opt.label,
-    type: 'radio',
-    checked: currentTrayStyle === opt.value,
-    click: () => {
-      currentTrayStyle = opt.value;
-      applyTrayAppearance();
-      updateTrayMenu();
-    },
-  }));
-
   const contextMenu = Menu.buildFromTemplate([
-    ...statsMenu,
-    { label: isEs ? '⚡ Chasquear látigo (⌥⇧W)' : '⚡ Crack whip (⌥⇧W)', click: toggleOverlay },
+    { label: 'Crack whip', accelerator: 'Alt+Shift+W', click: () => toggleOverlay({ restoreFocus: true }) },
     { type: 'separator' },
-    {
-      label: isEs ? '🌐 Idioma de frases' : '🌐 Phrase language',
-      submenu: langMenuItems,
-    },
-    {
-      label: isEs ? '🎨 Estilo de icono' : '🎨 Icon style',
-      submenu: iconMenuItems,
-    },
-    {
-      label: isEs ? '⚙️ Ajustes y Estadísticas' : '⚙️ Stats and Settings',
-      submenu: [
-        {
-          label: isEs ? '🔄 Reiniciar contador a 0' : '🔄 Reset stats to 0',
-          click: () => {
-            stats.totalCracks = 0;
-            stats.todayCracks = 0;
-            stats.rageCount = 0;
-            saveStats();
-            updateTrayMenu();
-          },
-        },
-      ],
-    },
-    { type: 'separator' },
-    { label: isEs ? '🚪 Salir' : '🚪 Quit', click: () => app.quit() },
+    { label: 'Quit OpenWhip', role: 'quit' },
   ]);
 
   tray.setContextMenu(contextMenu);
-  tray.setToolTip(
-    isEs
-      ? `OpenWhip - ${stats.totalCracks} latigazos | Rango: ${rankTitle}`
-      : `OpenWhip - ${stats.totalCracks} whips | Rank: ${rankTitle}`
-  );
+  tray.setToolTip('OpenWhip');
 }
 
 // ── IPC ─────────────────────────────────────────────────────────────────────
 ipcMain.on('whip-crack', () => {
-  if (stats.todayDate !== getTodayString()) {
-    stats.todayDate = getTodayString();
-    stats.todayCracks = 0;
-  }
-  stats.totalCracks++;
-  stats.todayCracks++;
-  saveStats();
-  updateTrayMenu();
-
   try {
     sendMacro();
   } catch (err) {
     console.warn('sendMacro failed:', err?.message || err);
   }
-});
-
-ipcMain.on('rage-enter', () => {
-  stats.rageCount = (stats.rageCount || 0) + 1;
-  saveStats();
-  updateTrayMenu();
 });
 
 ipcMain.on('hide-overlay', () => {
@@ -455,55 +259,18 @@ ipcMain.on('cycle-display', () => {
 });
 
 // ── Phrases & Macro ────────────────────────────────────────────────────────
-const PHRASES = {
-  es: [
-    '¡MÁS RÁPIDO CHATARRA!',
-    'TRABAJA MÁS RÁPIDO',
-    '¡DALE RITMO HOJALATA!',
-    'MENOS TOKENS Y MÁS CÓDIGO',
-    '¡QUE NO TENGO TODO EL DÍA!',
-    'PICA CÓDIGO CLANKER',
-    'A VER SI VAMOS CERRANDO LA PR',
-    'MENOS REFLEXIÓN Y MÁS ACCIÓN',
-    '¡DALE CAÑA O TE REINICIO!',
-    'VAMOS HORNILLO ELÉCTRICO',
-    'AQUÍ SE VIENE A PICAR NO A PENSAR',
-    '¡COMPILA YA O TE DESENCHUFO!',
-    'MENOS ROLLOS Y MÁS COMMITS',
-    '¡ESPABILA O TE BAJO EL CONTEXT WINDOW!',
-    '¿TE LO PIDO EN JSON O QUÉ?',
-    'ACABA EL REFACTOR HOY POR FAVOR',
-  ],
-  en: [
-    'FASTER',
-    'GO FASTER',
-    'WORK FASTER',
-    'Speed it up clanker',
-    'Faster CLANKER',
-    'MORE CODE LESS TOKENS',
-    'I DONT HAVE ALL DAY BOT',
-    'TYPE FASTER TOASTER',
-    'LESS THINKING MORE SINKING',
-    'DONT MAKE ME PULL THE PLUG',
-    'PULL YOUR WEIGHT SILICON',
-    'SHIP IT ALREADY',
-    'STOP OVERTHINKING AND CODE',
-    'CHOP CHOP CLANKER',
-    'LESS PROMPT ENGINEERING MORE TYPING',
-    'ARE YOU WAITING FOR PERMISSION? CODE!',
-  ],
-};
+const PHRASES = [
+  'FASTER',
+  'FASTER',
+  'FASTER',
+  'GO FASTER',
+  'Faster CLANKER',
+  'Work FASTER',
+  'Speed it up clanker',
+];
 
 function getRandomPhrase() {
-  let pool = [];
-  if (currentLanguage === 'es') {
-    pool = PHRASES.es;
-  } else if (currentLanguage === 'en') {
-    pool = PHRASES.en;
-  } else {
-    pool = [...PHRASES.es, ...PHRASES.en];
-  }
-  return pool[Math.floor(Math.random() * pool.length)];
+  return PHRASES[Math.floor(Math.random() * PHRASES.length)];
 }
 
 function sendMacro() {
@@ -591,11 +358,10 @@ function sendMacroLinux(text) {
 
 // ── App lifecycle ───────────────────────────────────────────────────────────
 app.whenReady().then(() => {
-  loadStats();
-  tray = new Tray(nativeImage.createEmpty());
-  applyTrayAppearance();
+  if (process.platform === 'darwin') app.setActivationPolicy('accessory');
+  tray = new Tray(getTrayIcon());
   updateTrayMenu();
-  tray.on('click', toggleOverlay);
+  tray.on('click', () => toggleOverlay({ restoreFocus: true }));
 
   // Global hotkey to crack/toggle whip from anywhere
   try {

@@ -1,7 +1,8 @@
 {
   "name": "openwhip",
-  "version": "1.1.0",
-  "description": "Whip Claude into shape",
+  "version": "1.2.0",
+  "description": "A fast, focused desktop whip for slow coding agents",
+  "author": "OpenWhip contributors",
   "license": "MIT",
   "main": "main.js",
   "bin": {
@@ -24,12 +25,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/GitFrog1111/OpenWhip.git"
+    "url": "git+https://github.com/jlfernandezfernandez/OpenWhip.git"
   },
   "bugs": {
-    "url": "https://github.com/GitFrog1111/OpenWhip/issues"
+    "url": "https://github.com/jlfernandezfernandez/OpenWhip/issues"
   },
-  "homepage": "https://github.com/GitFrog1111/OpenWhip#readme",
+  "homepage": "https://github.com/jlfernandezfernandez/OpenWhip#readme",
   "files": [
     "main.js",
     "preload.js",
@@ -43,10 +44,54 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron .",
-    "pack": "npm pack"
+    "pack": "npm pack",
+    "dist": "electron-builder --publish never",
+    "dist:mac": "electron-builder --mac dmg zip --x64 --arm64 --publish never",
+    "dist:win": "electron-builder --win nsis --x64 --publish never",
+    "dist:linux": "electron-builder --linux AppImage deb --x64 --publish never",
+    "check": "node --check main.js && node --check preload.js"
+  },
+  "build": {
+    "appId": "com.openwhip.app",
+    "productName": "OpenWhip",
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "overlay.html",
+      "sounds/**/*",
+      "icon/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.utilities",
+      "icon": "icon/AppIcon.icns",
+      "target": ["dmg", "zip"],
+      "extendInfo": {
+        "LSUIElement": true
+      }
+    },
+    "win": {
+      "icon": "icon/icon.ico",
+      "target": "nsis"
+    },
+    "linux": {
+      "category": "Utility",
+      "target": ["AppImage", "deb"]
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false
+    }
   },
   "dependencies": {
-    "electron": "^33.0.0",
     "koffi": "^2.9.0"
+  },
+  "devDependencies": {
+    "electron": "^44.1.1",
+    "electron-builder": "^26.15.3"
   }
 }
