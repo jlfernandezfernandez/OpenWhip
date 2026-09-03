@@ -1,0 +1,21 @@
+package-lock.json
+  s_f7900be7210f0c::t_600040fba37831 3,9,24,1729-1731
+package.json
+  s_f7900be7210f0c::t_a77cc638700d5a 4,106
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "d3931fe8c36fc87ed34561a054bbcfc9a2fa4fd8",
+  "prompts": {},
+  "sessions": {
+    "s_f7900be7210f0c": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "577eae63-e42d-4a1b-b147-dcd0f9c2145f",
+        "model": "copilot/kimi-k3"
+      },
+      "human_author": "Jordi Luis Fernández Fernández <jordilff@ext.inditex.com>"
+    }
+  }
+}
