@@ -1,0 +1,16 @@
+README.md
+  h_6fb1b01c3fe550 22-30,47
+main.js
+  h_6fb1b01c3fe550 34,121,249,251,253,255,257-275,284,286,301,304-305,308,312,336-356,359,361-389
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "5d2373a688260451ca7117535636195c3cf2c313",
+  "prompts": {},
+  "humans": {
+    "h_6fb1b01c3fe550": {
+      "author": "Jordi Luis Fernández Fernández <jordilff@ext.inditex.com>"
+    }
+  }
+}
