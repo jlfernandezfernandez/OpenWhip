@@ -1,7 +1,7 @@
 {
   "name": "openwhip",
-  "desktopName": "com.openwhip.app",
-  "version": "1.2.4",
+  "desktopName": "com.openwhip.app.desktop",
+  "version": "1.2.5",
   "description": "A fast, focused desktop whip for slow coding agents",
   "author": {
     "name": "OpenWhip contributors",
@@ -60,7 +60,7 @@
     "productName": "OpenWhip",
     "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
     "directories": {
-      "output": "dist"
+      "output": "dist.noindex"
     },
     "files": [
       "main.js",

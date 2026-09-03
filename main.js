@@ -321,6 +321,14 @@ function sendMacroMac(text) {
 }
 
 function sendMacroLinux(text) {
+  const isWayland = Boolean(process.env.WAYLAND_DISPLAY)
+    || process.env.XDG_SESSION_TYPE === 'wayland';
+
+  if (isWayland) {
+    sendMacroWayland(text);
+    return;
+  }
+
   execFile(
     'xdotool',
     [
@@ -333,6 +341,29 @@ function sendMacroLinux(text) {
       }
     }
   );
+}
+
+function sendMacroWayland(text) {
+  execFile('wtype', ['--', text], wtypeError => {
+    if (!wtypeError) {
+      execFile('wtype', ['-k', 'Return'], enterError => {
+        if (enterError) console.warn('Wayland Enter key failed:', enterError.message);
+      });
+      return;
+    }
+
+    // wtype uses Wayland's virtual-keyboard protocol. ydotool is the fallback
+    // for compositors that do not expose it, provided ydotoold is configured.
+    execFile('ydotool', ['type', text], ydotoolError => {
+      if (ydotoolError) {
+        console.warn('Wayland typing failed. Install wtype or configure ydotoold:', ydotoolError.message);
+        return;
+      }
+      execFile('ydotool', ['key', '28:1', '28:0'], enterError => {
+        if (enterError) console.warn('Wayland Enter key failed:', enterError.message);
+      });
+    });
+  });
 }
 
 // ── App lifecycle ───────────────────────────────────────────────────────────

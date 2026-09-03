@@ -14,11 +14,16 @@ The easiest option is to download the installer for your platform from [GitHub R
 - Windows: run the `.exe` installer.
 - Linux: use the `.AppImage` or install the `.deb` package.
 
-On macOS, OpenWhip does not request permissions at launch. macOS may require keyboard-control permission when the app first tries to type into another app. Linux users need `xdotool`:
+On macOS, OpenWhip does not request permissions at launch. macOS may require keyboard-control permission when the app first tries to type into another app.
+
+On Linux, install the small keyboard helper for your display server:
 
 ```bash
-sudo apt install xdotool
+sudo apt install xdotool  # X11
+sudo apt install wtype    # Wayland
 ```
+
+Wayland compositors without the virtual-keyboard protocol can use `ydotool` instead, with its `ydotoold` service configured. The global shortcut uses the standard desktop portal on Wayland.
 
 ## Uninstall
 
@@ -53,7 +58,7 @@ npm run dist:win
 npm run dist:linux
 ```
 
-Pushing a version tag such as `v1.2.4` builds all platform installers and publishes a GitHub release automatically.
+Pushing a version tag such as `v1.2.5` builds all platform installers and publishes a GitHub release automatically. Local builds go into `dist.noindex` so macOS Spotlight does not list development copies of the app.
 
 ## License
 

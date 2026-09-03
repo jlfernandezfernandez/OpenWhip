@@ -22,8 +22,8 @@ jobs:
             command: npm run dist:linux
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -32,22 +32,22 @@ jobs:
       - run: ${{ matrix.command }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: openwhip-${{ runner.os }}
           path: |
-            dist/*.dmg
-            dist/*.zip
-            dist/*.exe
-            dist/*.AppImage
-            dist/*.deb
+            dist.noindex/*.dmg
+            dist.noindex/*.zip
+            dist.noindex/*.exe
+            dist.noindex/*.AppImage
+            dist.noindex/*.deb
           if-no-files-found: error
 
   release:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           path: release-assets
           merge-multiple: true
