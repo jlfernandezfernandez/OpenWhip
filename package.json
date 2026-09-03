@@ -1,8 +1,12 @@
 {
   "name": "openwhip",
-  "version": "1.2.1",
+  "desktopName": "com.openwhip.app",
+  "version": "1.2.2",
   "description": "A fast, focused desktop whip for slow coding agents",
-  "author": "OpenWhip contributors",
+  "author": {
+    "name": "OpenWhip contributors",
+    "email": "jlfernandezfernandez@users.noreply.github.com"
+  },
   "license": "MIT",
   "main": "main.js",
   "bin": {
@@ -78,15 +82,17 @@
       }
     },
     "win": {
-      "icon": "icon/icon.ico",
+      "icon": "icon/icon.png",
       "target": "nsis"
     },
     "linux": {
       "category": "Utility",
+      "synopsis": "A fast desktop whip for slow coding agents",
       "target": [
         "AppImage",
         "deb"
-      ]
+      ],
+      "syncDesktopName": true
     },
     "nsis": {
       "oneClick": true,
