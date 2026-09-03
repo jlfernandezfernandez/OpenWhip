@@ -7,7 +7,6 @@ const {
   nativeImage,
   screen,
   globalShortcut,
-  systemPreferences,
 } = require('electron');
 const path = require('path');
 const fs = require('fs');
@@ -37,49 +36,12 @@ if (process.platform === 'win32') {
 let tray, overlay;
 let overlayReady = false;
 let spawnQueued = false;
-let restoreFocusQueued = false;
 let activeDisplayId = null;
 let cursorTrackTimer = null;
 
 // ── Keyboard constants ──
-const VK_CONTROL = 0x11;
 const VK_RETURN  = 0x0D;
-const VK_C       = 0x43;
-const VK_MENU    = 0x12; // Alt
-const VK_TAB     = 0x09;
 const KEYUP      = 0x0002;
-
-/** Return focus after a tray click on platforms where the system tray takes it. */
-function refocusPreviousApp() {
-  const delayMs = 80;
-  const run = () => {
-    if (process.platform === 'win32') {
-      if (!keybd_event) return;
-      keybd_event(VK_MENU, 0, 0, 0);
-      keybd_event(VK_TAB, 0, 0, 0);
-      keybd_event(VK_TAB, 0, KEYUP, 0);
-      keybd_event(VK_MENU, 0, KEYUP, 0);
-    } else if (process.platform === 'darwin') {
-      const script = [
-        'tell application "System Events"',
-        '  key down command',
-        '  key code 48',
-        '  key up command',
-        'end tell',
-      ].join('\n');
-      execFile('osascript', ['-e', script], err => {
-        if (err) console.warn('Could not restore the previous app:', err.message);
-      });
-    } else if (process.platform === 'linux') {
-      execFile('xdotool', ['key', '--clearmodifiers', 'alt+Tab'], err => {
-        if (err) {
-          console.warn('refocus previous app (Alt+Tab) failed. Install xdotool:', err.message);
-        }
-      });
-    }
-  };
-  setTimeout(run, delayMs);
-}
 
 // ── Tray Icons ──────────────────────────────────────────────────────────────
 function getTemplateImage() {
@@ -201,8 +163,6 @@ function createOverlay(display) {
       const relX = cursorPos.x - bounds.x;
       const relY = cursorPos.y - bounds.y;
       overlay.webContents.send('spawn-whip', { x: relX, y: relY });
-      if (restoreFocusQueued) refocusPreviousApp();
-      restoreFocusQueued = false;
     }
   });
 
@@ -210,21 +170,17 @@ function createOverlay(display) {
     overlay = null;
     overlayReady = false;
     spawnQueued = false;
-    restoreFocusQueued = false;
     stopCursorTracking();
   });
 }
 
-function toggleOverlay({ restoreFocus = false } = {}) {
+function toggleOverlay() {
   if (overlay && overlay.isVisible()) {
     overlay.webContents.send('drop-whip');
     stopCursorTracking();
     return;
   }
 
-  // macOS menu-bar apps do not always take focus. Only Cmd+Tab when they did;
-  // otherwise the foreground app (for example Teams) is already the target.
-  const shouldRestoreFocus = restoreFocus && (process.platform !== 'darwin' || app.isActive());
   const target = getTargetDisplay();
   activeDisplayId = target.id;
 
@@ -243,10 +199,8 @@ function toggleOverlay({ restoreFocus = false } = {}) {
 
   if (overlayReady) {
     overlay.webContents.send('spawn-whip', { x: relX, y: relY });
-    if (shouldRestoreFocus) refocusPreviousApp();
   } else {
     spawnQueued = true;
-    restoreFocusQueued = shouldRestoreFocus;
   }
 }
 
@@ -255,7 +209,7 @@ function updateTrayMenu() {
   if (!tray) return;
 
   const contextMenu = Menu.buildFromTemplate([
-    { label: 'Crack whip', accelerator: 'Alt+Shift+W', click: () => toggleOverlay({ restoreFocus: true }) },
+    { label: 'Crack whip', accelerator: 'Alt+Shift+W', click: toggleOverlay },
     { type: 'separator' },
     { label: 'Quit OpenWhip', role: 'quit' },
   ]);
@@ -325,10 +279,6 @@ function sendMacroWindows(text) {
     if (shiftState & 1) keybd_event(0x10, 0, KEYUP, 0);
   };
 
-  keybd_event(VK_CONTROL, 0, 0, 0);
-  keybd_event(VK_C, 0, 0, 0);
-  keybd_event(VK_C, 0, KEYUP, 0);
-  keybd_event(VK_CONTROL, 0, KEYUP, 0);
   for (const ch of text) tapChar(ch);
   keybd_event(VK_RETURN, 0, 0, 0);
   keybd_event(VK_RETURN, 0, KEYUP, 0);
@@ -336,31 +286,17 @@ function sendMacroWindows(text) {
 
 function sendMacroMac(text) {
   const escaped = text.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-  const interruptScript = [
-    'tell application "System Events"',
-    '  key code 8 using {control down}',
-    'end tell',
-  ].join('\n');
-  const typeAndEnterScript = [
+  const script = [
     'tell application "System Events"',
     `  keystroke "${escaped}"`,
     '  key code 36',
     'end tell',
   ].join('\n');
 
-  execFile('osascript', ['-e', interruptScript], err => {
+  execFile('osascript', ['-e', script], err => {
     if (err) {
-      console.warn('mac macro failed (enable Accessibility for terminal/app):', err.message);
-      return;
+      console.warn('mac macro failed:', err.message);
     }
-
-    setTimeout(() => {
-      execFile('osascript', ['-e', typeAndEnterScript], err2 => {
-        if (err2) {
-          console.warn('mac macro failed (enable Accessibility for terminal/app):', err2.message);
-        }
-      });
-    }, 300);
   });
 }
 
@@ -368,7 +304,6 @@ function sendMacroLinux(text) {
   execFile(
     'xdotool',
     [
-      'key', '--clearmodifiers', 'ctrl+c',
       'type', '--delay', '1', '--clearmodifiers', '--', text,
       'key', 'Return',
     ],
@@ -384,11 +319,10 @@ function sendMacroLinux(text) {
 app.whenReady().then(() => {
   if (process.platform === 'darwin') {
     app.setActivationPolicy('accessory');
-    systemPreferences.isTrustedAccessibilityClient(true);
   }
   tray = new Tray(getTrayIcon());
   updateTrayMenu();
-  tray.on('click', () => toggleOverlay({ restoreFocus: true }));
+  tray.on('click', toggleOverlay);
 
   // Global hotkey to crack/toggle whip from anywhere
   try {
