@@ -22,7 +22,10 @@
   },
   "scripts": {
     "start": "electron .",
-    "check": "node --check src/main.js && node --check src/typer.js && node --check src/updater.js && node --check src/preload.js && node --check src/overlay.js",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "test": "node --test",
+    "check": "npm run lint && npm test",
     "dist": "electron-builder --publish never",
     "dist:mac": "electron-builder --mac --publish never",
     "dist:win": "electron-builder --win --x64 --publish never",
@@ -33,6 +36,7 @@
     "koffi": "^3.2.1"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.5.12",
     "electron": "^44.2.0",
     "electron-builder": "^26.15.3"
   },

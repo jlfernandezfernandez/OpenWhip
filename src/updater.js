@@ -17,6 +17,7 @@ const crypto = require('node:crypto');
 const { execFile } = require('node:child_process');
 const { pipeline } = require('node:stream/promises');
 const { Readable } = require('node:stream');
+const { isNewer, macAssetName } = require('./release');
 
 const REPO = 'jlfernandezfernandez/OpenWhip';
 const RELEASES_URL = `https://github.com/${REPO}/releases/latest`;
@@ -33,13 +34,6 @@ function set(status, version = state.version, url = state.url) {
   Object.assign(state, { status, version, url });
   listener(state);
 }
-
-const isNewer = (a, b) => {
-  const pa = a.split('.').map(Number);
-  const pb = b.split('.').map(Number);
-  for (let i = 0; i < 3; i++) if ((pa[i] || 0) !== (pb[i] || 0)) return (pa[i] || 0) > (pb[i] || 0);
-  return false;
-};
 
 function run(cmd, args) {
   return new Promise((resolve, reject) => execFile(cmd, args, err => (err ? reject(err) : resolve())));
@@ -61,7 +55,12 @@ async function download(asset, dest) {
   const hash = crypto.createHash('sha256');
   await pipeline(
     Readable.fromWeb(res.body),
-    async function* (source) { for await (const chunk of source) { hash.update(chunk); yield chunk; } },
+    async function* (source) {
+      for await (const chunk of source) {
+        hash.update(chunk);
+        yield chunk;
+      }
+    },
     fs.createWriteStream(dest),
   );
   const expected = (asset.digest || '').replace(/^sha256:/, '');
@@ -70,7 +69,8 @@ async function download(asset, dest) {
 
 function macBundle() {
   const bundle = path.resolve(app.getPath('exe'), '..', '..', '..');
-  const movable = bundle.endsWith('.app') && !bundle.includes('/AppTranslocation/') && !bundle.startsWith('/Volumes/');
+  const movable =
+    bundle.endsWith('.app') && !bundle.includes('/AppTranslocation/') && !bundle.startsWith('/Volumes/');
   try {
     fs.accessSync(path.dirname(bundle), fs.constants.W_OK);
   } catch {
@@ -116,7 +116,7 @@ function githubStrategy() {
       if (!isNewer(latest.version, app.getVersion())) return;
 
       const bundle = process.platform === 'darwin' ? macBundle() : null;
-      const asset = latest.assets.find(a => a.name === `OpenWhip-${latest.version}-mac-${process.arch}.zip`);
+      const asset = latest.assets.find(a => a.name === macAssetName(latest.version, process.arch));
       if (!bundle || !asset) return set('manual', latest.version, latest.url);
 
       set('downloading', latest.version, latest.url);
@@ -154,7 +154,8 @@ function electronUpdaterStrategy() {
   });
   return {
     check: () => autoUpdater.checkForUpdates(),
-    install: () => (state.status === 'ready' ? autoUpdater.quitAndInstall(true, true) : shell.openExternal(state.url)),
+    install: () =>
+      state.status === 'ready' ? autoUpdater.quitAndInstall(true, true) : shell.openExternal(state.url),
     installOnQuit: () => {
       if (state.status !== 'ready') return false;
       autoUpdater.quitAndInstall(true, false);
@@ -165,7 +166,11 @@ function electronUpdaterStrategy() {
 
 function pickStrategy() {
   if (process.platform === 'win32' || (process.platform === 'linux' && process.env.APPIMAGE)) {
-    try { return electronUpdaterStrategy(); } catch (err) { console.warn('electron-updater unavailable:', err.message); }
+    try {
+      return electronUpdaterStrategy();
+    } catch (err) {
+      console.warn('electron-updater unavailable:', err.message);
+    }
   }
   return githubStrategy();
 }

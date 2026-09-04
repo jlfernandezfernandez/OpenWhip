@@ -106,6 +106,7 @@ src/
   typer.js     keystroke injection: CoreGraphics (macOS), SendInput (Windows),
                xdotool / wtype / ydotool (Linux)
   updater.js   background updates: GitHub Releases API (macOS), electron-updater
+  release.js   pure helpers: version compare, asset naming
   preload.js   sandboxed bridge between overlay and main
 ```
 
@@ -120,7 +121,12 @@ A crack is detected when the tip exceeds a speed threshold.
 ```bash
 npm install     # Node ≥ 22.12
 npm start
+npm run check   # biome lint + format check, node:test
 ```
+
+Tests are deliberately small and target what has actually broken: version
+comparison, the updater/artifact naming contract, IPC channel names between
+main, preload and overlay, and the packaging config.
 
 `npm run dist:mac` / `dist:win` / `dist:linux` build a local installer into
 `dist.noindex/`. Pushing a tag like `v2.2.0` builds all installers — macOS

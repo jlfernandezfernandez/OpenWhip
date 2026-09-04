@@ -1,6 +1,16 @@
 'use strict';
 
-const { app, BrowserWindow, Tray, Menu, globalShortcut, ipcMain, nativeImage, screen, systemPreferences } = require('electron');
+const {
+  app,
+  BrowserWindow,
+  Tray,
+  Menu,
+  globalShortcut,
+  ipcMain,
+  nativeImage,
+  screen,
+  systemPreferences,
+} = require('electron');
 const path = require('node:path');
 const { execFile } = require('node:child_process');
 const { typeLine } = require('./typer');
@@ -48,9 +58,12 @@ function buildMenu() {
   const { status, version } = updater.state;
   const items = [];
 
-  if (status === 'ready') items.push({ label: `Restart to update to v${version}`, click: updater.install }, { type: 'separator' });
-  else if (status === 'manual') items.push({ label: `Download v${version}…`, click: updater.install }, { type: 'separator' });
-  else if (status === 'downloading') items.push({ label: `Downloading v${version}…`, enabled: false }, { type: 'separator' });
+  if (status === 'ready')
+    items.push({ label: `Restart to update to v${version}`, click: updater.install }, { type: 'separator' });
+  else if (status === 'manual')
+    items.push({ label: `Download v${version}…`, click: updater.install }, { type: 'separator' });
+  else if (status === 'downloading')
+    items.push({ label: `Downloading v${version}…`, enabled: false }, { type: 'separator' });
 
   items.push({
     label: overlay?.isVisible() ? 'Drop the whip' : 'Start whipping',

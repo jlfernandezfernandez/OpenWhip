@@ -32,8 +32,12 @@ function createMacTyper() {
 
   const cg = koffi.load('/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics');
   const cf = koffi.load('/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation');
-  const createKeyEvent = cg.func('void *CGEventCreateKeyboardEvent(void *source, uint16_t key, bool keyDown)');
-  const setUnicode = cg.func('void CGEventKeyboardSetUnicodeString(void *event, ulong length, const uint16_t *str)');
+  const createKeyEvent = cg.func(
+    'void *CGEventCreateKeyboardEvent(void *source, uint16_t key, bool keyDown)',
+  );
+  const setUnicode = cg.func(
+    'void CGEventKeyboardSetUnicodeString(void *event, ulong length, const uint16_t *str)',
+  );
   const post = cg.func('void CGEventPost(uint32_t tap, void *event)');
   const release = cf.func('void CFRelease(void *cf)');
 
@@ -63,12 +67,25 @@ function createWindowsTyper() {
 
   const user32 = koffi.load('user32.dll');
   const KEYBDINPUT = koffi.struct('KEYBDINPUT', {
-    wVk: 'uint16', wScan: 'uint16', dwFlags: 'uint32', time: 'uint32', dwExtraInfo: 'uintptr_t',
+    wVk: 'uint16',
+    wScan: 'uint16',
+    dwFlags: 'uint32',
+    time: 'uint32',
+    dwExtraInfo: 'uintptr_t',
   });
   const MOUSEINPUT = koffi.struct('MOUSEINPUT', {
-    dx: 'int32', dy: 'int32', mouseData: 'uint32', dwFlags: 'uint32', time: 'uint32', dwExtraInfo: 'uintptr_t',
+    dx: 'int32',
+    dy: 'int32',
+    mouseData: 'uint32',
+    dwFlags: 'uint32',
+    time: 'uint32',
+    dwExtraInfo: 'uintptr_t',
   });
-  const HARDWAREINPUT = koffi.struct('HARDWAREINPUT', { uMsg: 'uint32', wParamL: 'uint16', wParamH: 'uint16' });
+  const HARDWAREINPUT = koffi.struct('HARDWAREINPUT', {
+    uMsg: 'uint32',
+    wParamL: 'uint16',
+    wParamH: 'uint16',
+  });
   const INPUT = koffi.struct('INPUT', {
     type: 'uint32',
     u: koffi.union('INPUT_UNION', { mi: MOUSEINPUT, ki: KEYBDINPUT, hi: HARDWAREINPUT }),
@@ -106,16 +123,19 @@ function createLinuxTyper() {
   const wayland = Boolean(process.env.WAYLAND_DISPLAY) || process.env.XDG_SESSION_TYPE === 'wayland';
 
   if (!wayland) {
-    return text => run('xdotool', ['type', '--delay', '1', '--clearmodifiers', '--', text, 'key', 'Return'])
-      .catch(err => console.warn('Typing failed. Install xdotool:', err.message));
+    return text =>
+      run('xdotool', ['type', '--delay', '1', '--clearmodifiers', '--', text, 'key', 'Return']).catch(err =>
+        console.warn('Typing failed. Install xdotool:', err.message),
+      );
   }
 
   // wtype uses the virtual-keyboard protocol; ydotool (with ydotoold) is the
   // fallback for compositors that do not expose it.
-  return text => run('wtype', ['--', text])
-    .then(() => run('wtype', ['-k', 'Return']))
-    .catch(() => run('ydotool', ['type', text]).then(() => run('ydotool', ['key', '28:1', '28:0'])))
-    .catch(err => console.warn('Typing failed. Install wtype or configure ydotoold:', err.message));
+  return text =>
+    run('wtype', ['--', text])
+      .then(() => run('wtype', ['-k', 'Return']))
+      .catch(() => run('ydotool', ['type', text]).then(() => run('ydotool', ['key', '28:1', '28:0'])))
+      .catch(err => console.warn('Typing failed. Install wtype or configure ydotoold:', err.message));
 }
 
 // ── Public API ──────────────────────────────────────────────────────────────
@@ -123,10 +143,14 @@ let typer;
 
 function createTyper() {
   switch (process.platform) {
-    case 'darwin': return createMacTyper();
-    case 'win32': return createWindowsTyper();
-    case 'linux': return createLinuxTyper();
-    default: return null;
+    case 'darwin':
+      return createMacTyper();
+    case 'win32':
+      return createWindowsTyper();
+    case 'linux':
+      return createLinuxTyper();
+    default:
+      return null;
   }
 }
 

@@ -99,7 +99,8 @@ const audioPool = ['A', 'B', 'C', 'D', 'E'].map(name => {
 });
 
 function playCrack() {
-  const audio = audioPool.find(a => a.paused || a.ended) || audioPool[Math.floor(Math.random() * audioPool.length)];
+  const audio =
+    audioPool.find(a => a.paused || a.ended) || audioPool[Math.floor(Math.random() * audioPool.length)];
   audio.currentTime = 0;
   audio.play().catch(() => {});
 }

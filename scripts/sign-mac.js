@@ -15,6 +15,8 @@ exports.default = async ({ electronPlatformName, appOutDir, packager }) => {
   if (electronPlatformName !== 'darwin') return;
   const app = path.join(appOutDir, `${packager.appInfo.productFilename}.app`);
   const identity = process.env.MAC_SIGN_IDENTITY || '-';
-  execFileSync('codesign', ['--force', '--deep', '--timestamp=none', '--sign', identity, app], { stdio: 'inherit' });
+  execFileSync('codesign', ['--force', '--deep', '--timestamp=none', '--sign', identity, app], {
+    stdio: 'inherit',
+  });
   execFileSync('codesign', ['--verify', '--deep', '--strict', app], { stdio: 'inherit' });
 };
