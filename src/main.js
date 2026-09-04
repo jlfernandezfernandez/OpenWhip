@@ -1,6 +1,6 @@
 'use strict';
 
-const { app, BrowserWindow, Tray, Menu, ipcMain, nativeImage, screen, systemPreferences } = require('electron');
+const { app, BrowserWindow, Tray, Menu, globalShortcut, ipcMain, nativeImage, screen, systemPreferences } = require('electron');
 const path = require('node:path');
 const { typeLine } = require('./typer');
 const updater = require('./updater');
@@ -21,7 +21,9 @@ const PHRASES = [
 ];
 
 const IS_MAC = process.platform === 'darwin';
+const IS_LINUX = process.platform === 'linux';
 const ICON_DIR = path.join(__dirname, '..', 'icon');
+const SHORTCUT = 'CommandOrControl+Alt+W';
 
 let tray = null;
 let overlay = null;
@@ -30,6 +32,7 @@ let spawnQueued = false;
 let activeDisplayId = null;
 let cursorTimer = null;
 let accessibilityPrompted = false;
+let shortcutRegistered = false;
 
 // ── Tray ────────────────────────────────────────────────────────────────────
 function trayIcon() {
@@ -41,13 +44,19 @@ function trayIcon() {
 }
 
 function buildMenu() {
-  const update = updateMenuItem();
-  const pending = ['ready', 'manual', 'downloading'].includes(updater.state.status);
+  const { status, version } = updater.state;
   const items = [];
 
-  // An available update leads the menu; the idle "Check for updates…" sits by Quit.
-  if (pending) items.push(update, { type: 'separator' });
-  items.push({ label: 'Crack the whip', click: toggleOverlay });
+  if (status === 'ready') items.push({ label: `Restart to update to v${version}`, click: updater.install }, { type: 'separator' });
+  else if (status === 'manual') items.push({ label: `Download v${version}…`, click: updater.install }, { type: 'separator' });
+  else if (status === 'downloading') items.push({ label: `Downloading v${version}…`, enabled: false }, { type: 'separator' });
+
+  items.push({
+    label: overlay?.isVisible() ? 'Drop the whip' : 'Start whipping',
+    accelerator: shortcutRegistered ? SHORTCUT : undefined,
+    registerAccelerator: false,
+    click: toggleOverlay,
+  });
 
   if (IS_MAC && !systemPreferences.isTrustedAccessibilityClient(false)) {
     items.push({ type: 'separator' }, {
@@ -56,26 +65,19 @@ function buildMenu() {
     });
   }
 
-  items.push({ type: 'separator' });
-  if (!pending) items.push(update);
-  items.push({ label: 'Quit OpenWhip', click: quit });
+  items.push({ type: 'separator' }, { label: 'Quit OpenWhip', click: quit });
   return Menu.buildFromTemplate(items);
 }
 
-function updateMenuItem() {
-  const { status, version } = updater.state;
-  switch (status) {
-    case 'ready': return { label: `Restart to update to v${version}`, click: updater.install };
-    case 'manual': return { label: `Download v${version}…`, click: updater.install };
-    case 'checking': return { label: 'Checking for updates…', enabled: false };
-    case 'downloading': return { label: `Downloading v${version}…`, enabled: false };
-    default: return { label: 'Check for updates…', click: () => updater.check(true) };
-  }
+// macOS/Windows pop the menu on click so it is always rebuilt fresh; Linux
+// status icons only support a static context menu, refreshed on state changes.
+function showMenu() {
+  if (!IS_LINUX) tray?.popUpContextMenu(buildMenu());
 }
 
 function refreshMenu() {
   if (!tray) return;
-  tray.setContextMenu(buildMenu());
+  if (IS_LINUX) tray.setContextMenu(buildMenu());
   tray.setToolTip(updater.state.status === 'ready' ? 'OpenWhip — restart to update' : 'OpenWhip');
 }
 
@@ -134,7 +136,6 @@ function createOverlay(display) {
 }
 
 function toggleOverlay() {
-  refreshMenu();
   if (overlay?.isVisible()) {
     overlay.webContents.send('drop');
     return;
@@ -151,11 +152,13 @@ function toggleOverlay() {
 
   if (overlayReady) overlay.webContents.send('spawn', cursorRelativeTo(display.bounds));
   else spawnQueued = true;
+  refreshMenu();
 }
 
 function hideOverlay() {
   stopCursorTracking();
   if (overlay && !overlay.isDestroyed()) overlay.hide();
+  refreshMenu();
 }
 
 // Follow the pointer across monitors while the whip is out.
@@ -198,6 +201,7 @@ ipcMain.on('hidden', hideOverlay);
 // ── Lifecycle ───────────────────────────────────────────────────────────────
 function quit() {
   stopCursorTracking();
+  globalShortcut.unregisterAll();
   overlay?.destroy();
   tray?.destroy();
   if (updater.installOnQuit()) return;
@@ -207,8 +211,12 @@ function quit() {
 app.whenReady().then(() => {
   if (IS_MAC) app.setActivationPolicy('accessory');
 
+  shortcutRegistered = globalShortcut.register(SHORTCUT, toggleOverlay);
+  if (!shortcutRegistered) console.warn(`Shortcut ${SHORTCUT} unavailable`);
+
   tray = new Tray(trayIcon());
-  tray.on('click', toggleOverlay);
+  tray.on('click', showMenu);
+  tray.on('right-click', showMenu);
   refreshMenu();
   updater.start(refreshMenu);
 });

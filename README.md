@@ -4,9 +4,10 @@
 
 A tiny menu-bar whip for when your coding agent needs a little encouragement.
 
-Click the tray icon, swing the mouse, and every crack types a short message
-(**FASTER**, **GO FASTER**, …) into whatever has keyboard focus — a terminal,
-Teams, Slack, an IDE chat — and presses Enter.
+Press **Ctrl/⌘+Alt+W** (or pick **Start whipping** from the tray menu), swing
+the mouse, and every crack types a short message (**FASTER**, **GO FASTER**, …)
+into whatever has keyboard focus — a terminal, Teams, Slack, an IDE chat — and
+presses Enter.
 
 ## Install
 
@@ -38,8 +39,8 @@ command — that wording is what macOS shows for unsigned downloads.
 ### Updates
 
 OpenWhip checks GitHub Releases on launch and every few hours, downloads the
-new version in the background and then shows **Restart to update** in the tray
-menu. You can also pick **Check for updates…** at any time.
+new version in the background and then shows **Restart to update** at the top
+of the tray menu. There is nothing to configure.
 
 - **macOS** — the `.zip` for your architecture is downloaded, its SHA-256 is
   verified against the release, and the app bundle in `/Applications` is
@@ -54,7 +55,8 @@ OpenWhip asks for the bare minimum needed to type into another app:
 
 - **macOS** — *Accessibility* only. The first crack shows the system prompt;
   toggle OpenWhip on in **System Settings → Privacy & Security → Accessibility**.
-  There is no AppleScript, so no extra *Automation* prompt.
+  Until then the tray menu offers **Allow keyboard access…**. There is no
+  AppleScript, so no extra *Automation* prompt.
 - **Windows / Linux** — nothing.
 
 OpenWhip never reads the screen, listens to the keyboard, or touches the
@@ -62,11 +64,14 @@ network.
 
 ## Use
 
-1. Click the tray icon — the whip appears under your pointer on that display.
+1. Press **Ctrl/⌘+Alt+W** or click the tray icon → **Start whipping**. The whip
+   appears under your pointer on that display.
 2. Move the mouse to swing it. Snap it fast enough and it cracks.
-3. Click to drop the whip; it falls off screen and the overlay goes idle (0% CPU).
+3. Click (or press the shortcut again) to drop the whip; it falls off screen and
+   the overlay goes idle (0% CPU).
 
-Right-click the icon to crack, check for updates, or quit.
+The tray menu only ever shows what is relevant: start/drop, a pending update,
+the macOS permission prompt while it is missing, and Quit.
 
 The overlay never takes focus, so the app you were typing in keeps receiving
 the messages.

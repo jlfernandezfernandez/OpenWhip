@@ -9,7 +9,7 @@
 //   Windows/AppImage electron-updater (works unsigned).
 //   Otherwise        Notify only; the menu item opens the release page.
 
-const { app, dialog, net, shell } = require('electron');
+const { app, net, shell } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 const os = require('node:os');
@@ -27,7 +27,6 @@ const CHECK_EVERY_MS = 6 * 60 * 60 * 1000;
 // status: idle | checking | downloading | ready | manual
 const state = { status: 'idle', version: null, url: RELEASES_URL };
 let listener = () => {};
-let interactive = false;
 let strategy;
 
 function set(status, version = state.version, url = state.url) {
@@ -44,11 +43,6 @@ const isNewer = (a, b) => {
 
 function run(cmd, args) {
   return new Promise((resolve, reject) => execFile(cmd, args, err => (err ? reject(err) : resolve())));
-}
-
-function upToDate() {
-  if (!interactive) return;
-  dialog.showMessageBox({ type: 'info', message: 'OpenWhip is up to date', detail: `Version ${app.getVersion()}` });
 }
 
 // ── GitHub Releases API (macOS + manual) ────────────────────────────────────
@@ -119,7 +113,7 @@ function githubStrategy() {
   return {
     async check() {
       const latest = await fetchLatest();
-      if (!isNewer(latest.version, app.getVersion())) return upToDate();
+      if (!isNewer(latest.version, app.getVersion())) return;
 
       const bundle = process.platform === 'darwin' ? macBundle() : null;
       const asset = latest.assets.find(a => a.name === `OpenWhip-${latest.version}-mac-${process.arch}.zip`);
@@ -152,7 +146,7 @@ function electronUpdaterStrategy() {
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
   autoUpdater.on('update-available', info => set('downloading', info.version));
-  autoUpdater.on('update-not-available', () => { set('idle'); upToDate(); });
+  autoUpdater.on('update-not-available', () => set('idle'));
   autoUpdater.on('update-downloaded', info => set('ready', info.version));
   autoUpdater.on('error', err => {
     console.warn('electron-updater:', err.message);
@@ -177,10 +171,9 @@ function pickStrategy() {
 }
 
 // ── Public API ──────────────────────────────────────────────────────────────
-async function check(userInitiated = false) {
+async function check() {
   if (!app.isPackaged || state.status === 'downloading' || state.status === 'ready') return;
   strategy ??= pickStrategy();
-  interactive = userInitiated;
   set('checking');
   try {
     await strategy.check();
@@ -188,7 +181,6 @@ async function check(userInitiated = false) {
     console.warn('Update check failed:', err.message);
   } finally {
     if (state.status === 'checking') set('idle');
-    interactive = false;
   }
 }
 
