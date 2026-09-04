@@ -1,0 +1,19 @@
+package-lock.json
+  s_1527ecab6eec5f::t_9d4949556a12b1 12,1929-1932,1935-1942,1945-1951,1954,2216-2250,2803-2815,3777-3782
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "a9c20259ae94916cf55e4d7147c6e8fa018eb72a",
+  "prompts": {},
+  "sessions": {
+    "s_1527ecab6eec5f": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "8ec55605-03bb-4a97-bfa1-aa3b6854ff16",
+        "model": "copilot/claude-fable-5.1"
+      },
+      "human_author": "Jordi Luis Fernández Fernández <jordilff@ext.inditex.com>"
+    }
+  }
+}
