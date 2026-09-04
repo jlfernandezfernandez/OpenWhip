@@ -66,7 +66,7 @@ network.
 2. Move the mouse to swing it. Snap it fast enough and it cracks.
 3. Click to drop the whip; it falls off screen and the overlay goes idle (0% CPU).
 
-Right-click the icon to crack, toggle **Launch at login**, or quit.
+Right-click the icon to crack, check for updates, or quit.
 
 The overlay never takes focus, so the app you were typing in keeps receiving
 the messages.

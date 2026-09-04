@@ -41,25 +41,24 @@ function trayIcon() {
 }
 
 function buildMenu() {
-  const items = [{ label: 'Crack the whip', click: toggleOverlay }, { type: 'separator' }];
+  const update = updateMenuItem();
+  const pending = ['ready', 'manual', 'downloading'].includes(updater.state.status);
+  const items = [];
+
+  // An available update leads the menu; the idle "Check for updates…" sits by Quit.
+  if (pending) items.push(update, { type: 'separator' });
+  items.push({ label: 'Crack the whip', click: toggleOverlay });
 
   if (IS_MAC && !systemPreferences.isTrustedAccessibilityClient(false)) {
-    items.push({
+    items.push({ type: 'separator' }, {
       label: 'Allow keyboard access…',
       click: () => systemPreferences.isTrustedAccessibilityClient(true),
     });
   }
 
-  if (IS_MAC || process.platform === 'win32') {
-    items.push({
-      label: 'Launch at login',
-      type: 'checkbox',
-      checked: app.getLoginItemSettings().openAtLogin,
-      click: item => app.setLoginItemSettings({ openAtLogin: item.checked }),
-    });
-  }
-
-  items.push({ type: 'separator' }, updateMenuItem(), { label: 'Quit OpenWhip', click: quit });
+  items.push({ type: 'separator' });
+  if (!pending) items.push(update);
+  items.push({ label: 'Quit OpenWhip', click: quit });
   return Menu.buildFromTemplate(items);
 }
 
