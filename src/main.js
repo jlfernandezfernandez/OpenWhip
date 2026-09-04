@@ -3,6 +3,7 @@
 const { app, BrowserWindow, Tray, Menu, ipcMain, nativeImage, screen, systemPreferences } = require('electron');
 const path = require('node:path');
 const { typeLine } = require('./typer');
+const updater = require('./updater');
 
 if (!app.requestSingleInstanceLock()) {
   app.quit();
@@ -58,12 +59,25 @@ function buildMenu() {
     });
   }
 
-  items.push({ type: 'separator' }, { label: 'Quit OpenWhip', click: quit });
+  items.push({ type: 'separator' }, updateMenuItem(), { label: 'Quit OpenWhip', click: quit });
   return Menu.buildFromTemplate(items);
 }
 
+function updateMenuItem() {
+  const { status, version } = updater.state;
+  switch (status) {
+    case 'ready': return { label: `Restart to update to v${version}`, click: updater.install };
+    case 'manual': return { label: `Download v${version}…`, click: updater.install };
+    case 'checking': return { label: 'Checking for updates…', enabled: false };
+    case 'downloading': return { label: `Downloading v${version}…`, enabled: false };
+    default: return { label: 'Check for updates…', click: () => updater.check(true) };
+  }
+}
+
 function refreshMenu() {
-  if (tray) tray.setContextMenu(buildMenu());
+  if (!tray) return;
+  tray.setContextMenu(buildMenu());
+  tray.setToolTip(updater.state.status === 'ready' ? 'OpenWhip — restart to update' : 'OpenWhip');
 }
 
 // ── Overlay ─────────────────────────────────────────────────────────────────
@@ -187,6 +201,7 @@ function quit() {
   stopCursorTracking();
   overlay?.destroy();
   tray?.destroy();
+  if (updater.installOnQuit()) return;
   app.exit(0);
 }
 
@@ -194,9 +209,9 @@ app.whenReady().then(() => {
   if (IS_MAC) app.setActivationPolicy('accessory');
 
   tray = new Tray(trayIcon());
-  tray.setToolTip('OpenWhip');
   tray.on('click', toggleOverlay);
   refreshMenu();
+  updater.start(refreshMenu);
 });
 
 app.on('second-instance', toggleOverlay);

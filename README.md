@@ -35,6 +35,19 @@ Gatekeeper blocks the first launch. Nothing is wrong with your Mac. Either:
 If you see *"OpenWhip is damaged and can't be opened"*, use the Terminal
 command — that wording is what macOS shows for unsigned downloads.
 
+### Updates
+
+OpenWhip checks GitHub Releases on launch and every few hours, downloads the
+new version in the background and then shows **Restart to update** in the tray
+menu. You can also pick **Check for updates…** at any time.
+
+- **macOS** — the `.zip` for your architecture is downloaded, its SHA-256 is
+  verified against the release, and the app bundle in `/Applications` is
+  swapped atomically. No new `.dmg` to open.
+- **Windows / AppImage** — handled by `electron-updater`; the update is
+  applied on restart (or on quit).
+- **`.deb`** — notify only; the menu item opens the release page.
+
 ### Permissions
 
 OpenWhip asks for the bare minimum needed to type into another app:
@@ -70,6 +83,7 @@ src/
   main.js      tray, overlay window, IPC
   overlay.js   whip physics + rendering (fixed-step Verlet, HiDPI canvas)
   typer.js     per-platform keystroke injection
+  updater.js   background updates (GitHub Releases / electron-updater)
   preload.js   sandboxed bridge
 ```
 

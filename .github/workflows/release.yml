@@ -37,9 +37,13 @@ jobs:
           name: openwhip-${{ runner.os }}-${{ runner.arch }}
           path: |
             dist.noindex/*.dmg
+            dist.noindex/*.zip
             dist.noindex/*.exe
             dist.noindex/*.AppImage
             dist.noindex/*.deb
+            dist.noindex/*.exe.blockmap
+            dist.noindex/latest.yml
+            dist.noindex/latest-linux.yml
           if-no-files-found: error
 
   release:
