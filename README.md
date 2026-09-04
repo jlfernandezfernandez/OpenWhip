@@ -56,7 +56,8 @@ OpenWhip asks for the bare minimum needed to type into another app:
 - **macOS** — *Accessibility* only. The first crack shows the system prompt;
   toggle OpenWhip on in **System Settings → Privacy & Security → Accessibility**.
   Until then the tray menu offers **Allow keyboard access…**. There is no
-  AppleScript, so no extra *Automation* prompt.
+  AppleScript, so no extra *Automation* prompt. Release builds are signed with
+  a stable (self-signed) certificate, so the grant survives updates.
 - **Windows / Linux** — nothing.
 
 OpenWhip never reads the screen, listens to the keyboard, or touches the

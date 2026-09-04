@@ -31,6 +31,22 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
+      # Self-signed certificate: keeps the macOS Accessibility grant stable across updates.
+      - if: runner.os == 'macOS'
+        env:
+          P12: ${{ secrets.MAC_SIGN_P12 }}
+          P12_PASSWORD: ${{ secrets.MAC_SIGN_P12_PASSWORD }}
+        run: |
+          echo "$P12" | base64 --decode > sign.p12
+          security create-keychain -p "" build.keychain
+          security unlock-keychain -p "" build.keychain
+          security import sign.p12 -k build.keychain -P "$P12_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain >/dev/null
+          security list-keychains -d user -s build.keychain $(security list-keychains -d user | tr -d '" ')
+          security find-certificate -c OpenWhip -p build.keychain > cert.pem
+          sudo security add-trusted-cert -d -r trustRoot -p codeSign -k /Library/Keychains/System.keychain cert.pem
+          rm sign.p12 cert.pem
+          echo "MAC_SIGN_IDENTITY=OpenWhip" >> "$GITHUB_ENV"
       - run: ${{ matrix.command }}
       - uses: actions/upload-artifact@v5
         with:
