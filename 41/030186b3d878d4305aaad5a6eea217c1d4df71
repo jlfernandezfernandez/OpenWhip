@@ -1,0 +1,25 @@
+biome.json
+  s_1527ecab6eec5f::t_1d0d46d39b370b 4
+site/index.html
+  s_1527ecab6eec5f::t_ca135a790ba566 1-73
+site/site.js
+  s_1527ecab6eec5f::t_7991d584d3aa75 1-119
+site/style.css
+  s_1527ecab6eec5f::t_c19d071deccb54 1-314
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "41030186b3d878d4305aaad5a6eea217c1d4df71",
+  "prompts": {},
+  "sessions": {
+    "s_1527ecab6eec5f": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "8ec55605-03bb-4a97-bfa1-aa3b6854ff16",
+        "model": "copilot/claude-fable-5.1"
+      },
+      "human_author": "Jordi Luis Fernández Fernández <jordilff@ext.inditex.com>"
+    }
+  }
+}
