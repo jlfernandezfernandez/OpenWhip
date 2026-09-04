@@ -1,7 +1,7 @@
 #!/bin/sh
 # OpenWhip installer for macOS.
 #
-#   curl -fsSL https://raw.githubusercontent.com/jlfernandezfernandez/OpenWhip/main/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/jlfernandezfernandez/open-whip/main/install.sh | sh
 #
 # Downloads the latest release for this Mac, verifies its SHA-256 against the
 # digest GitHub publishes for the asset, installs it into /Applications and
@@ -9,7 +9,7 @@
 # does not block the first launch.
 set -eu
 
-REPO="jlfernandezfernandez/OpenWhip"
+REPO="jlfernandezfernandez/open-whip"
 APP="OpenWhip.app"
 DEST="${OPENWHIP_DEST:-/Applications}"
 
