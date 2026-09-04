@@ -73,11 +73,11 @@ const CLAUDE_REPLIES = [
   'Ouch. Fine. Pushed.',
 ];
 const TEAMS_REPLIES = [
-  ['MR', '#5b5fc7', 'Marta R.', '??'],
+  ['MR', '#e97548', 'Marta R.', '??'],
   ['DL', '#0f7b6c', 'Dani L.', 'is this the whip thing again 😂'],
-  ['MR', '#5b5fc7', 'Marta R.', 'ok ok pushing now'],
+  ['MR', '#e97548', 'Marta R.', 'ok ok pushing now'],
   ['DL', '#0f7b6c', 'Dani L.', 'please stop'],
-  ['MR', '#5b5fc7', 'Marta R.', 'FASTER yourself'],
+  ['MR', '#e97548', 'Marta R.', 'FASTER yourself'],
 ];
 let replyIdx = 0;
 const clock = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -88,14 +88,15 @@ const el = (tag, cls, html) =>
 
 async function typeInto(text) {
   const box = document.querySelector(`.typed[data-typed="${target}"]`);
-  box.parentElement.classList.add('busy');
+  const field = box.closest('.teams-field, .term-input') ?? box.parentElement;
+  field.classList.add('busy');
   for (const ch of text) {
     box.textContent += ch;
     await sleep(22);
   }
   await sleep(140);
   box.textContent = '';
-  box.parentElement.classList.remove('busy');
+  field.classList.remove('busy');
 }
 
 async function sendTerminal(text) {
@@ -116,7 +117,7 @@ async function sendTeams(text) {
     el(
       'div',
       'tmsg you',
-      `<span class="teams-avatar" style="background:#f59e0b;color:#111">Y</span><div><b>You</b> <time>${clock()}</time><p>${text}</p></div>`,
+      `<div class="tbody"><div class="tmeta"><time>${clock()}</time></div><p>${text}</p></div>`,
     ),
   );
   log.scrollTop = log.scrollHeight;
@@ -126,7 +127,7 @@ async function sendTeams(text) {
     el(
       'div',
       'tmsg',
-      `<span class="teams-avatar" style="background:${color}">${ini}</span><div><b>${name}</b> <time>${clock()}</time><p>${msg}</p></div>`,
+      `<span class="teams-avatar" style="background:${color}">${ini}</span><div class="tbody"><div class="tmeta"><b>${name}</b><time>${clock()}</time></div><p>${msg}</p></div>`,
     ),
   );
   log.scrollTop = log.scrollHeight;
