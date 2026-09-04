@@ -6,13 +6,13 @@
 
 **A tiny menu-bar whip for when your coding agent needs a little encouragement.**
 
-[![Release](https://img.shields.io/github/v/release/jlfernandezfernandez/OpenWhip?label=release&color=f59e0b)](https://github.com/jlfernandezfernandez/OpenWhip/releases/latest)
-[![CI](https://img.shields.io/github/actions/workflow/status/jlfernandezfernandez/OpenWhip/ci.yml?label=ci)](https://github.com/jlfernandezfernandez/OpenWhip/actions/workflows/ci.yml)
-[![Downloads](https://img.shields.io/github/downloads/jlfernandezfernandez/OpenWhip/total?color=3b82f6)](https://github.com/jlfernandezfernandez/OpenWhip/releases)
+[![Release](https://img.shields.io/github/v/release/jlfernandezfernandez/open-whip?label=release&color=f59e0b)](https://github.com/jlfernandezfernandez/open-whip/releases/latest)
+[![CI](https://img.shields.io/github/actions/workflow/status/jlfernandezfernandez/open-whip/ci.yml?label=ci)](https://github.com/jlfernandezfernandez/open-whip/actions/workflows/ci.yml)
+[![Downloads](https://img.shields.io/github/downloads/jlfernandezfernandez/open-whip/total?color=3b82f6)](https://github.com/jlfernandezfernandez/open-whip/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-22c55e)](LICENSE)
 ![macOS · Windows · Linux](https://img.shields.io/badge/platform-macOS%20%C2%B7%20Windows%20%C2%B7%20Linux-64748b)
 
-**[▶ Try it in your browser](https://jlfernandezfernandez.github.io/OpenWhip/)**
+**[▶ Try it in your browser](https://jlfernandezfernandez.github.io/open-whip/)**
 
 </div>
 
@@ -32,7 +32,7 @@ has keyboard focus (a terminal, Teams, Slack, an IDE chat) and presses Enter.
 **macOS** — one line, no Gatekeeper prompt:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/jlfernandezfernandez/OpenWhip/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/jlfernandezfernandez/open-whip/main/install.sh | sh
 ```
 
 It fetches the latest release for your Mac, verifies the SHA-256 GitHub
@@ -40,7 +40,7 @@ publishes for it, installs into `/Applications` and launches OpenWhip.
 ([Read the script](install.sh) — 40 lines of POSIX sh.)
 
 **Everything else** — grab the installer from
-[**Releases**](https://github.com/jlfernandezfernandez/OpenWhip/releases/latest):
+[**Releases**](https://github.com/jlfernandezfernandez/open-whip/releases/latest):
 
 | Platform | File                                    | Notes                                                                                                                          |
 | -------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
