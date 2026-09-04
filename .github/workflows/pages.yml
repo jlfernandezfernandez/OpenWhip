@@ -30,6 +30,8 @@ jobs:
                   cp sounds/*.mp3 _site/sounds/
                   cp icon/icon.png _site/icon.png
                   cp assets/hero.jpg _site/hero.jpg
+                  # Cache-bust assets so a fresh HTML never pairs with stale CSS/JS.
+                  sed -i -E "s#(style\.css|site\.js|overlay\.js)\"#\1?v=${GITHUB_SHA::8}\"#g" _site/index.html
             - uses: actions/upload-pages-artifact@v4
               with:
                   path: _site

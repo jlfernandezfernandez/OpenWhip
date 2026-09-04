@@ -225,7 +225,7 @@ setInterval(tick, 1000);
 termLog.scrollTop = termLog.scrollHeight;
 $('term-status').textContent = `${agent.name} · ${CWD}`;
 
-// ── Teams: Contoso Engineering › General ────────────────────────────────────
+// ── Teams: Northwind Engineering › General ────────────────────────────────────
 const TEAMS_REPLIES = [
   ['MR', '#e97548', 'Marta Rivas', '??'],
   ['DL', '#0f7b6c', 'Dani Lorenzo', 'is this the whip thing again 😂'],
