@@ -1,6 +1,6 @@
 {
   "name": "openwhip",
-  "version": "2.1.3",
+  "version": "2.1.4",
   "private": true,
   "description": "A tiny menu-bar whip that tells your coding agent to hurry up",
   "author": {
