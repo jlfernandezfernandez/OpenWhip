@@ -49,6 +49,13 @@ of the tray menu. There is nothing to configure.
   applied on restart (or on quit).
 - **`.deb`** — notify only; the menu item opens the release page.
 
+**Coming from a version before 2.1.3?** Versions 2.0.x have no updater:
+download the latest installer once and install it over the old copy. On macOS
+the first crack will ask for Accessibility again (the old grant was tied to
+the old build's signature); OpenWhip clears the stale entry for you, so just
+enable it in the prompt. From then on, updates are automatic and keep the
+permission.
+
 ### Permissions
 
 OpenWhip asks for the bare minimum needed to type into another app:

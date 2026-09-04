@@ -2,6 +2,7 @@
 
 const { app, BrowserWindow, Tray, Menu, globalShortcut, ipcMain, nativeImage, screen, systemPreferences } = require('electron');
 const path = require('node:path');
+const { execFile } = require('node:child_process');
 const { typeLine } = require('./typer');
 const updater = require('./updater');
 
@@ -59,10 +60,7 @@ function buildMenu() {
   });
 
   if (IS_MAC && !systemPreferences.isTrustedAccessibilityClient(false)) {
-    items.push({ type: 'separator' }, {
-      label: 'Allow keyboard access…',
-      click: () => systemPreferences.isTrustedAccessibilityClient(true),
-    });
+    items.push({ type: 'separator' }, { label: 'Allow keyboard access…', click: requestAccessibility });
   }
 
   items.push({ type: 'separator' }, { label: 'Quit OpenWhip', click: quit });
@@ -180,13 +178,22 @@ function stopCursorTracking() {
 }
 
 // ── Whip crack → type a phrase ──────────────────────────────────────────────
+// Grants from builds with a different signature (pre-2.1.3 ad-hoc builds) show
+// as enabled in System Settings but no longer apply. Clear them so the system
+// prompt creates a fresh entry instead of asking the user to toggle it off/on.
+function requestAccessibility() {
+  execFile('tccutil', ['reset', 'Accessibility', 'com.openwhip.app'], () => {
+    systemPreferences.isTrustedAccessibilityClient(true);
+    refreshMenu();
+  });
+}
+
 function canType() {
   if (!IS_MAC) return true;
   if (systemPreferences.isTrustedAccessibilityClient(false)) return true;
   if (!accessibilityPrompted) {
     accessibilityPrompted = true;
-    systemPreferences.isTrustedAccessibilityClient(true);
-    refreshMenu();
+    requestAccessibility();
   }
   return false;
 }
