@@ -1,0 +1,21 @@
+package-lock.json
+  s_1527ecab6eec5f::t_27b9bfd7807b9a 3,9
+package.json
+  s_1527ecab6eec5f::t_9b9a14f288092d 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "d9d12604165c718dc2028d5f9f7dcbf94ecc6d5d",
+  "prompts": {},
+  "sessions": {
+    "s_1527ecab6eec5f": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "8ec55605-03bb-4a97-bfa1-aa3b6854ff16",
+        "model": "copilot/claude-fable-5.1"
+      },
+      "human_author": "Jordi Luis Fernández Fernández <jordilff@ext.inditex.com>"
+    }
+  }
+}
