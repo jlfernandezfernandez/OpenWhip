@@ -250,47 +250,89 @@ h1 {
 
 .install {
   margin-top: 48px;
+  text-align: center;
 }
 .install h2 {
-  font-size: 24px;
-  margin: 0 0 12px;
+  font-size: 28px;
+  margin: 0 0 16px;
 }
-.install p {
-  color: var(--muted);
-  margin: 0 0 8px;
-}
-pre {
-  position: relative;
-  margin: 0;
-  padding: 14px 96px 14px 16px;
-  background: #020617;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  overflow-x: auto;
-  font:
-    14px / 1.5 ui-monospace,
-    "SF Mono",
-    Menlo,
-    monospace;
-}
-.copy {
-  position: absolute;
-  right: 10px;
-  top: 10px;
-  border: 1px solid var(--line);
+.dl-card {
   background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 28px 24px 22px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}
+.btn-lg {
+  font-size: 18px;
+  padding: 14px 32px;
+  display: inline-block;
+}
+.dl-meta {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 12px 0 0;
+}
+.dl-note {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 14px auto 0;
+  max-width: 560px;
+  line-height: 1.5;
+}
+.dl-note strong {
   color: var(--text);
-  border-radius: 8px;
-  padding: 4px 10px;
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
 }
-.others {
+.dl-note code {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  background: #020617;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+.dl-all {
   margin-top: 14px;
+  color: var(--muted);
+  font-size: 14px;
 }
-.others > a {
+.dl-all summary {
+  cursor: pointer;
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 999px;
+}
+.dl-all summary:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.04);
+}
+.dl-all ul {
+  list-style: none;
+  padding: 0;
+  margin: 10px auto 0;
+  max-width: 480px;
+  text-align: left;
+}
+.dl-all li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.dl-all li:last-child {
+  border-bottom: 0;
+}
+.dl-all li a {
+  color: var(--text);
+  text-decoration: none;
+}
+.dl-all li a:hover {
   color: var(--accent-2);
+}
+.dl-all li span {
+  color: var(--muted);
+  font-size: 13px;
+  white-space: nowrap;
 }
 
 footer {

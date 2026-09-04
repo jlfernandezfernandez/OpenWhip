@@ -22,7 +22,7 @@
 
     <div class="cta">
       <button type="button" id="grab" class="btn btn-primary">🪢 Grab the whip</button>
-      <a id="download" class="btn" href="https://github.com/jlfernandezfernandez/OpenWhip/releases/latest">Download</a>
+      <a id="download" class="btn" href="#install">Download</a>
       <a class="btn btn-ghost" href="https://github.com/jlfernandezfernandez/OpenWhip">GitHub</a>
     </div>
     <p class="hint" id="hint">Grab it, swing the mouse hard, listen for the crack. Click to drop.</p>
@@ -54,12 +54,18 @@
     </section>
 
     <section class="install" id="install">
-      <h2>Install</h2>
-      <div class="install-mac">
-        <p>macOS one-liner — no Gatekeeper prompt:</p>
-        <pre><code id="cmd">curl -fsSL https://raw.githubusercontent.com/jlfernandezfernandez/OpenWhip/main/install.sh | sh</code><button type="button" class="copy" id="copy" title="Copy">Copy</button></pre>
+      <h2>Download</h2>
+      <div class="dl-card">
+        <a id="dl-main" class="btn btn-primary btn-lg" href="https://github.com/jlfernandezfernandez/OpenWhip/releases/latest">Download OpenWhip</a>
+        <p class="dl-meta" id="dl-meta">Free · macOS, Windows &amp; Linux</p>
+        <p class="dl-note" id="dl-note" hidden></p>
       </div>
-      <p class="others">Or grab the <a href="https://github.com/jlfernandezfernandez/OpenWhip/releases/latest">.dmg, .exe, .AppImage or .deb</a> from the latest release. <span id="ver"></span></p>
+      <details class="dl-all">
+        <summary>All downloads</summary>
+        <ul id="dl-list">
+          <li><a href="https://github.com/jlfernandezfernandez/OpenWhip/releases/latest">See the latest release on GitHub</a></li>
+        </ul>
+      </details>
     </section>
   </main>
 

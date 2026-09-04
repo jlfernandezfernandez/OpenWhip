@@ -92,28 +92,96 @@ const REPLIES = [
 let replyIdx = 0;
 const agentReply = () => REPLIES[replyIdx++ % REPLIES.length];
 
-// Detect OS for the download button and show the latest version.
-(async () => {
-  try {
-    const res = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`);
-    const rel = await res.json();
-    const ua = navigator.userAgent;
-    const os = /Mac/.test(ua) ? 'mac' : /Win/.test(ua) ? 'win' : /Linux/.test(ua) ? 'linux' : null;
-    // Browsers report "Intel" on Apple Silicon too, so macOS keeps the release page (both .dmg listed).
-    const pick = a =>
-      (os === 'win' && a.name.endsWith('.exe')) || (os === 'linux' && a.name.endsWith('.AppImage'));
-    const asset = rel.assets.find(pick);
-    if (asset) $('download').href = asset.browser_download_url;
-    if (os)
-      $('download').textContent = `Download for ${{ mac: 'macOS', win: 'Windows', linux: 'Linux' }[os]}`;
-    $('ver').textContent = `Latest: ${rel.tag_name}.`;
-  } catch {}
-})();
+// ── Download: detect platform and offer the right installer ─────────────────
+const PLATFORMS = {
+  'mac-arm64': { label: 'macOS', detail: 'Apple Silicon', match: n => n.endsWith('mac-arm64.dmg') },
+  'mac-x64': { label: 'macOS', detail: 'Intel', match: n => n.endsWith('mac-x64.dmg') },
+  win: { label: 'Windows', detail: '64-bit installer', match: n => n.endsWith('.exe') },
+  'linux-appimage': { label: 'Linux', detail: 'AppImage', match: n => n.endsWith('.AppImage') },
+  'linux-deb': { label: 'Linux', detail: 'Debian / Ubuntu (.deb)', match: n => n.endsWith('.deb') },
+};
 
-$('copy').addEventListener('click', async () => {
-  await navigator.clipboard.writeText($('cmd').textContent);
-  $('copy').textContent = 'Copied';
-  setTimeout(() => ($('copy').textContent = 'Copy'), 1200);
-});
+const MAC_NOTE =
+  'macOS may ask you to confirm the first launch: open System Settings → Privacy & Security and click <strong>Open Anyway</strong>. OpenWhip is signed but not notarized by Apple.';
+const LINUX_NOTE = 'Typing needs <code>xdotool</code> (X11) or <code>wtype</code> (Wayland) installed.';
+
+async function detectPlatform() {
+  const ua = navigator.userAgent;
+  if (/Windows/.test(ua)) return 'win';
+  if (/Linux/.test(ua) && !/Android/.test(ua)) return 'linux-appimage';
+  if (!/Mac/.test(ua)) return null;
+
+  // Browsers claim "Intel" on every Mac; ask Client Hints first, then the GPU.
+  try {
+    const hints = await navigator.userAgentData?.getHighEntropyValues(['architecture']);
+    if (hints?.architecture === 'arm') return 'mac-arm64';
+    if (hints?.architecture === 'x86') return 'mac-x64';
+  } catch {}
+  try {
+    const gl = document.createElement('canvas').getContext('webgl');
+    const ext = gl?.getExtension('WEBGL_debug_renderer_info');
+    const renderer = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : '';
+    if (/Apple (M\d|GPU)/i.test(renderer)) return 'mac-arm64';
+    if (/Intel|AMD|Radeon|NVIDIA/i.test(renderer)) return 'mac-x64';
+  } catch {}
+  return 'mac';
+}
+
+(async () => {
+  const [rel, platform] = await Promise.all([
+    fetch(`https://api.github.com/repos/${REPO}/releases/latest`)
+      .then(r => r.json())
+      .catch(() => null),
+    detectPlatform(),
+  ]);
+  if (!rel?.assets) return;
+
+  const version = rel.tag_name.replace(/^v/, '');
+  const size = a => `${(a.size / 1048576).toFixed(0)} MB`;
+  const assetFor = key => rel.assets.find(a => PLATFORMS[key].match(a.name));
+
+  $('dl-list').innerHTML = Object.entries(PLATFORMS)
+    .map(([key, p]) => {
+      const a = assetFor(key);
+      return a
+        ? `<li><a href="${a.browser_download_url}"><b>${p.label}</b> · ${p.detail}</a><span>${size(a)}</span></li>`
+        : '';
+    })
+    .join('');
+
+  const key = platform === 'mac' ? null : platform;
+  const asset = key && assetFor(key);
+  const main = $('dl-main');
+  const meta = $('dl-meta');
+  const note = $('dl-note');
+
+  if (asset) {
+    const p = PLATFORMS[key];
+    main.href = asset.browser_download_url;
+    main.textContent = `Download for ${p.label}`;
+    meta.textContent = `${p.detail} · v${version} · ${size(asset)} · Free`;
+    $('download').textContent = `Download for ${p.label}`;
+    $('download').href = asset.browser_download_url;
+  } else if (platform === 'mac') {
+    // Could not tell the chip apart: show both, no guessing.
+    main.textContent = 'Download for macOS';
+    main.href = '#install';
+    main.addEventListener('click', e => {
+      e.preventDefault();
+      document.querySelector('.dl-all').open = true;
+    });
+    meta.textContent = `v${version} · pick Apple Silicon or Intel below`;
+    $('download').textContent = 'Download for macOS';
+  } else {
+    meta.textContent = `v${version} · macOS, Windows & Linux · Free`;
+  }
+
+  const noteHtml =
+    key?.startsWith('mac') || platform === 'mac' ? MAC_NOTE : key?.startsWith('linux') ? LINUX_NOTE : '';
+  if (noteHtml) {
+    note.innerHTML = noteHtml;
+    note.hidden = false;
+  }
+})();
 
 addEventListener('resize', () => listeners.displayChanged?.());
