@@ -1,0 +1,16 @@
+package-lock.json
+  h_6fb1b01c3fe550 3,9
+package.json
+  h_6fb1b01c3fe550 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "d0821ced082106df98c73f35a0341e7a7740e5d4",
+  "prompts": {},
+  "humans": {
+    "h_6fb1b01c3fe550": {
+      "author": "Jordi Luis Fernández Fernández <jordilff@ext.inditex.com>"
+    }
+  }
+}
