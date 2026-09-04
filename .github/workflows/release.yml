@@ -16,6 +16,8 @@ jobs:
         include:
           - os: macos-latest
             command: npm run dist:mac
+          - os: macos-15-intel
+            command: npm run dist:mac
           - os: windows-latest
             command: npm run dist:win
           - os: ubuntu-latest
@@ -30,14 +32,11 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: ${{ matrix.command }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/upload-artifact@v5
         with:
-          name: openwhip-${{ runner.os }}
+          name: openwhip-${{ runner.os }}-${{ runner.arch }}
           path: |
             dist.noindex/*.dmg
-            dist.noindex/*.zip
             dist.noindex/*.exe
             dist.noindex/*.AppImage
             dist.noindex/*.deb

@@ -1,7 +1,4 @@
 node_modules/
-dist/
 dist.noindex/
-out/
-*.tgz
 *.log
 .DS_Store

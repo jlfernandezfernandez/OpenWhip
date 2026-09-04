@@ -2,45 +2,45 @@
 
 ![Whip divider](assets/divider.png)
 
-A tiny desktop utility for when your coding agent needs a little encouragement.
+A tiny menu-bar whip for when your coding agent needs a little encouragement.
 
-OpenWhip lives in the menu bar or system tray. Summon the whip, crack it, and the app types one of the short English messages from the original release into the app you are using, then presses Enter.
+Click the tray icon, swing the mouse, and every crack types a short message
+(**FASTER**, **GO FASTER**, …) into whatever has keyboard focus — a terminal,
+Teams, Slack, an IDE chat — and presses Enter.
 
 ## Install
 
-The easiest option is to download the installer for your platform from [GitHub Releases](https://github.com/jlfernandezfernandez/OpenWhip/releases):
+Download the installer for your platform from
+[GitHub Releases](https://github.com/jlfernandezfernandez/OpenWhip/releases).
 
-- macOS: open the `.dmg` and drag OpenWhip to Applications.
-- Windows: run the `.exe` installer.
-- Linux: use the `.AppImage` or install the `.deb` package.
+| Platform | File                                    | Notes                                                                                                                                                     |
+| -------- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| macOS    | `OpenWhip-*-mac-arm64.dmg` / `-x64.dmg` | Drag to Applications. Builds are unsigned, so on first launch right-click → **Open**, or run `xattr -dr com.apple.quarantine /Applications/OpenWhip.app`. |
+| Windows  | `OpenWhip-*-win-x64.exe`                | One-click installer, per-user, no admin rights.                                                                                                           |
+| Linux    | `.AppImage` or `.deb`                   | Needs a typing helper: `xdotool` (X11) or `wtype` (Wayland). `ydotool` is used as a Wayland fallback if `ydotoold` is running.                            |
 
-On macOS, OpenWhip does not request permissions at launch. macOS may require keyboard-control permission when the app first tries to type into another app.
+### Permissions
 
-On Linux, install the small keyboard helper for your display server:
+OpenWhip asks for the bare minimum needed to type into another app:
 
-```bash
-sudo apt install xdotool  # X11
-sudo apt install wtype    # Wayland
-```
+- **macOS** — *Accessibility* only. The first crack shows the system prompt;
+  toggle OpenWhip on in **System Settings → Privacy & Security → Accessibility**.
+  There is no AppleScript, so no extra *Automation* prompt.
+- **Windows / Linux** — nothing.
 
-Wayland compositors without the virtual-keyboard protocol can use `ydotool` instead, with its `ydotoold` service configured.
+OpenWhip never reads the screen, listens to the keyboard, or touches the
+network.
 
-## Uninstall
+## Use
 
-- macOS: quit OpenWhip and move it from Applications to the Trash.
-- Windows: open **Settings → Apps → Installed apps**, select OpenWhip, and choose **Uninstall**.
-- Linux: delete the `.AppImage`, or run `sudo apt remove openwhip` if you installed the `.deb` package.
+1. Click the tray icon — the whip appears under your pointer on that display.
+2. Move the mouse to swing it. Snap it fast enough and it cracks.
+3. Click to drop the whip; it falls off screen and the overlay goes idle (0% CPU).
 
-## Controls
+Right-click the icon to crack, toggle **Launch at login**, or quit.
 
-- Click the menu bar or tray icon to summon the whip on the display under your pointer.
-- Move the pointer to control it.
-- Click to drop it.
-- Right-click the icon to crack the whip or quit OpenWhip.
-
-The renderer sleeps while the whip is hidden, so idle CPU use stays at zero.
-
-OpenWhip never sends `Ctrl+C` or switches applications. Keep the Teams chat, terminal, or other destination focused while cracking the whip.
+The overlay never takes focus, so the app you were typing in keeps receiving
+the messages.
 
 ## Development
 
@@ -49,16 +49,19 @@ npm install
 npm start
 ```
 
-Create a local installer with one of these commands:
-
-```bash
-npm run dist:mac
-npm run dist:win
-npm run dist:linux
+```
+src/
+  main.js      tray, overlay window, IPC
+  overlay.js   whip physics + rendering (fixed-step Verlet, HiDPI canvas)
+  typer.js     per-platform keystroke injection
+  preload.js   sandboxed bridge
 ```
 
-Pushing a version tag such as `v1.2.5` builds all platform installers and publishes a GitHub release automatically. Local builds go into `dist.noindex` so macOS Spotlight does not list development copies of the app.
+Build a local installer with `npm run dist:mac`, `dist:win` or `dist:linux`
+(output in `dist.noindex/`; macOS builds target the host architecture).
+Pushing a tag like `v2.0.0` builds all installers — macOS arm64 and Intel,
+Windows, Linux — and publishes a GitHub release.
 
 ## License
 
-MIT
+[MIT](LICENSE)

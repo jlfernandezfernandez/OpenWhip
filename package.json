@@ -1,32 +1,14 @@
 {
   "name": "openwhip",
-  "desktopName": "com.openwhip.app.desktop",
-  "version": "1.2.6",
-  "description": "A fast, focused desktop whip for slow coding agents",
+  "version": "2.0.0",
+  "private": true,
+  "description": "A tiny menu-bar whip that tells your coding agent to hurry up",
   "author": {
     "name": "OpenWhip contributors",
     "email": "jlfernandezfernandez@users.noreply.github.com"
   },
   "license": "MIT",
-  "main": "main.js",
-  "bin": {
-    "openwhip": "bin/openwhip.js",
-    "badclaude": "bin/openwhip.js"
-  },
-  "os": [
-    "darwin",
-    "linux",
-    "win32"
-  ],
-  "engines": {
-    "node": ">=18.0.0"
-  },
-  "keywords": [
-    "electron",
-    "tray",
-    "overlay",
-    "cli"
-  ],
+  "main": "src/main.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jlfernandezfernandez/OpenWhip.git"
@@ -35,25 +17,23 @@
     "url": "https://github.com/jlfernandezfernandez/OpenWhip/issues"
   },
   "homepage": "https://github.com/jlfernandezfernandez/OpenWhip#readme",
-  "files": [
-    "main.js",
-    "preload.js",
-    "overlay.html",
-    "sounds",
-    "icon",
-    "bin/openwhip.js",
-    "bin/badclaude.js",
-    "README.md"
-  ],
+  "engines": {
+    "node": ">=22.12"
+  },
   "scripts": {
     "start": "electron .",
-    "dev": "electron .",
-    "pack": "npm pack",
+    "check": "node --check src/main.js && node --check src/typer.js && node --check src/preload.js && node --check src/overlay.js",
     "dist": "electron-builder --publish never",
-    "dist:mac": "electron-builder --mac dmg zip --x64 --arm64 --publish never",
-    "dist:win": "electron-builder --win nsis --x64 --publish never",
-    "dist:linux": "electron-builder --linux AppImage deb --x64 --publish never",
-    "check": "node --check main.js && node --check preload.js"
+    "dist:mac": "electron-builder --mac --publish never",
+    "dist:win": "electron-builder --win --x64 --publish never",
+    "dist:linux": "electron-builder --linux --x64 --publish never"
+  },
+  "dependencies": {
+    "koffi": "^3.2.1"
+  },
+  "devDependencies": {
+    "electron": "^44.2.0",
+    "electron-builder": "^26.15.3"
   },
   "build": {
     "appId": "com.openwhip.app",
@@ -63,20 +43,21 @@
       "output": "dist.noindex"
     },
     "files": [
-      "main.js",
-      "preload.js",
-      "overlay.html",
+      "src/**/*",
       "sounds/**/*",
       "icon/**/*",
-      "package.json"
+      "package.json",
+      "!node_modules/koffi/{doc,lib,vendor}/**",
+      "!node_modules/koffi/{cnoke.cjs,*.md,*.d.ts}"
+    ],
+    "asarUnpack": [
+      "node_modules/koffi/**/*",
+      "node_modules/@koromix/**/*"
     ],
     "mac": {
       "category": "public.app-category.utilities",
       "icon": "icon/AppIcon.icns",
-      "target": [
-        "dmg",
-        "zip"
-      ],
+      "target": "dmg",
       "extendInfo": {
         "LSUIElement": true
       }
@@ -85,25 +66,22 @@
       "icon": "icon/icon.png",
       "target": "nsis"
     },
-    "linux": {
-      "category": "Utility",
-      "synopsis": "A fast desktop whip for slow coding agents",
-      "target": [
-        "AppImage",
-        "deb"
-      ],
-      "syncDesktopName": true
-    },
     "nsis": {
       "oneClick": true,
       "perMachine": false
+    },
+    "linux": {
+      "category": "Utility",
+      "icon": "icon/icon.png",
+      "synopsis": "A tiny tray whip that tells your coding agent to hurry up",
+      "files": [
+        "!node_modules/koffi/**",
+        "!node_modules/@koromix/**"
+      ],
+      "target": [
+        "AppImage",
+        "deb"
+      ]
     }
-  },
-  "dependencies": {
-    "koffi": "^2.9.0"
-  },
-  "devDependencies": {
-    "electron": "^43.5.1",
-    "electron-builder": "^26.15.3"
   }
 }
