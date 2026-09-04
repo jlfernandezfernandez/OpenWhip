@@ -14,36 +14,63 @@
 <body>
   <canvas id="c" aria-hidden="true"></canvas>
 
+  <a class="gh" href="https://github.com/jlfernandezfernandez/OpenWhip" aria-label="OpenWhip on GitHub" title="GitHub">
+    <svg viewBox="0 0 16 16" width="26" height="26" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+  </a>
+
   <header class="hero">
     <img class="logo" src="icon.png" alt="" width="72" height="72">
     <h1>OpenWhip</h1>
     <p class="tagline">A tiny menu-bar whip for when your coding agent needs a little encouragement.</p>
-    <p class="sub">Crack it, it types <strong>FASTER</strong> into whatever has focus — terminal, Teams, Slack, your IDE chat — and presses Enter.</p>
+    <p class="sub">Crack it, it types <strong>FASTER</strong> into whatever has focus and presses Enter. Point it at Claude Code when it overthinks — or at the team channel when your colleagues do.</p>
 
     <div class="cta">
-      <button type="button" id="grab" class="btn btn-primary">🪢 Grab the whip</button>
-      <a id="download" class="btn" href="#install">Download</a>
-      <a class="btn btn-ghost" href="https://github.com/jlfernandezfernandez/OpenWhip">GitHub</a>
+      <a id="download" class="btn btn-primary" href="https://github.com/jlfernandezfernandez/OpenWhip/releases/latest">Download</a>
+      <button type="button" id="grab" class="btn">🪢 Try it here</button>
     </div>
-    <p class="hint" id="hint">Grab it, swing the mouse hard, listen for the crack. Click to drop.</p>
+    <p class="dl-meta" id="dl-meta">Free · macOS, Windows &amp; Linux · <a href="https://github.com/jlfernandezfernandez/OpenWhip/releases/latest">other platforms</a></p>
+    <p class="hint" id="hint">Grab the whip, swing the mouse hard, listen for the crack. Click to drop.</p>
   </header>
 
   <main class="stage">
-    <section class="chat" aria-label="Demo chat with a coding agent">
-      <div class="chat-head">
+    <div class="tabs" role="tablist" aria-label="Where the whip types">
+      <button type="button" class="tab active" role="tab" data-target="term" aria-selected="true">⌘ Terminal · Claude Code</button>
+      <button type="button" class="tab" role="tab" data-target="teams" aria-selected="false">💬 Microsoft Teams</button>
+    </div>
+
+    <section class="panel term active" id="term" role="tabpanel" aria-label="Terminal running Claude Code">
+      <div class="panel-head">
         <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-        <span class="title">clanker-9000 · agent chat</span>
-        <span class="status" id="status">thinking…</span>
+        <span class="title">claude — ~/work/api — zsh</span>
       </div>
-      <div class="chat-log" id="log">
-        <div class="msg agent"><b>clanker-9000</b> I'll start by carefully analyzing the requirements. This may take a while…</div>
-        <div class="msg agent"><b>clanker-9000</b> Let me think about the optimal architecture for this change.</div>
-        <div class="msg agent"><b>clanker-9000</b> Considering edge cases. Considering more edge cases.</div>
+      <div class="term-log" id="term-log">
+<span class="c-dim">╭────────────────────────────────────────╮</span>
+<span class="c-dim">│</span> <span class="c-accent">✻</span> Welcome to <b>Claude Code</b>!                     <span class="c-dim">│</span>
+<span class="c-dim">│</span>   <span class="c-dim">/help for help, /status for your current setup</span> <span class="c-dim">│</span>
+<span class="c-dim">╰────────────────────────────────────────╯</span>
+
+<span class="c-dim">&gt;</span> refactor the auth module and add tests
+
+<span class="c-accent">⏺</span> I'll start by exploring the codebase to understand the current auth flow.
+<span class="c-accent">⏺</span> <b>Read</b>(src/auth/**) <span class="c-dim">… 47 files</span>
+<span class="c-accent">⏺</span> Let me think carefully about the optimal architecture before making changes.
+<span class="c-accent">⏺</span> Considering edge cases. Considering more edge cases.
+<span class="c-think">✶ Thinking… <span id="think-timer">(4m 12s · ↑ 38.2k tokens)</span></span>
+</div>
+      <div class="term-input"><span class="c-dim">&gt;</span> <span class="typed" data-typed="term"></span><span class="caret"></span></div>
+    </section>
+
+    <section class="panel teams" id="teams" role="tabpanel" aria-label="Microsoft Teams chat" hidden>
+      <div class="teams-head">
+        <span class="teams-avatar" style="background:#c4314b">DT</span>
+        <div><b>Dev Team</b><span>general · 6 members</span></div>
       </div>
-      <div class="chat-input">
-        <span class="prompt">›</span>
-        <span id="typed" class="typed"></span><span class="caret"></span>
+      <div class="teams-log" id="teams-log">
+        <div class="tmsg"><span class="teams-avatar" style="background:#5b5fc7">MR</span><div><b>Marta R.</b> <time>10:42</time><p>Any update on the release? Client is asking 🙈</p></div></div>
+        <div class="tmsg"><span class="teams-avatar" style="background:#0f7b6c">DL</span><div><b>Dani L.</b> <time>10:44</time><p>still waiting on the agent to finish the refactor</p></div></div>
+        <div class="tmsg"><span class="teams-avatar" style="background:#5b5fc7">MR</span><div><b>Marta R.</b> <time>10:45</time><p>it's been 40 minutes</p></div></div>
       </div>
+      <div class="teams-input"><span class="typed" data-typed="teams"></span><span class="caret"></span><span class="teams-placeholder">Type a message</span></div>
     </section>
 
     <section class="facts">
@@ -51,21 +78,6 @@
       <div class="fact"><span class="fact-title">Minimal permissions</span>macOS: Accessibility only. Windows &amp; Linux: nothing.</div>
       <div class="fact"><span class="fact-title">Zero idle cost</span>The overlay sleeps when the whip is away.</div>
       <div class="fact"><span class="fact-title">Self-updating</span>Downloads in the background, then <i>Restart to update</i>.</div>
-    </section>
-
-    <section class="install" id="install">
-      <h2>Download</h2>
-      <div class="dl-card">
-        <a id="dl-main" class="btn btn-primary btn-lg" href="https://github.com/jlfernandezfernandez/OpenWhip/releases/latest">Download OpenWhip</a>
-        <p class="dl-meta" id="dl-meta">Free · macOS, Windows &amp; Linux</p>
-        <p class="dl-note" id="dl-note" hidden></p>
-      </div>
-      <details class="dl-all">
-        <summary>All downloads</summary>
-        <ul id="dl-list">
-          <li><a href="https://github.com/jlfernandezfernandez/OpenWhip/releases/latest">See the latest release on GitHub</a></li>
-        </ul>
-      </details>
     </section>
   </main>
 

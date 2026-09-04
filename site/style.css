@@ -118,7 +118,7 @@ h1 {
 .hint {
   color: var(--muted);
   font-size: 14px;
-  margin-top: 14px;
+  margin-top: 6px;
   min-height: 21px;
 }
 
@@ -128,14 +128,56 @@ h1 {
   padding: 8px 24px 64px;
 }
 
-.chat {
+/* GitHub corner */
+.gh {
+  position: fixed;
+  top: 18px;
+  right: 20px;
+  color: var(--muted);
+  z-index: 10;
+  transition:
+    color 0.15s ease,
+    transform 0.15s ease;
+}
+.gh:hover {
+  color: var(--text);
+  transform: scale(1.08);
+}
+
+/* Demo targets */
+.tabs {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+.tab {
+  appearance: none;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  padding: 8px 14px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.tab:hover {
+  color: var(--text);
+}
+.tab.active {
+  color: var(--text);
   background: var(--panel);
+  border-color: var(--line);
+}
+
+.panel {
   border: 1px solid var(--line);
   border-radius: 14px;
   overflow: hidden;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
 }
-.chat-head {
+.panel-head {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -148,7 +190,6 @@ h1 {
   width: 11px;
   height: 11px;
   border-radius: 50%;
-  background: #334155;
 }
 .dot:nth-child(1) {
   background: #ef4444;
@@ -162,69 +203,150 @@ h1 {
 .title {
   margin-left: 8px;
 }
-.status {
-  margin-left: auto;
-}
-.status.rushed {
-  color: var(--accent-2);
-}
-
-.chat-log {
-  padding: 14px;
-  height: 260px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  font-size: 15px;
-}
-.msg {
-  padding: 8px 12px;
-  border-radius: 10px;
-  max-width: 85%;
-}
-.msg > b {
-  display: block;
-  font-size: 12px;
-  color: var(--muted);
-  margin-bottom: 2px;
-}
-.msg.agent {
-  background: #0f172a;
-  align-self: flex-start;
-}
-.msg.you {
-  background: #3b2f0b;
-  border: 1px solid #6b4f0f;
-  align-self: flex-end;
-  font-family: ui-monospace, "SF Mono", Menlo, monospace;
-  color: var(--accent-2);
-}
-.msg.you > b {
-  color: #b7791f;
-}
-
-.chat-input {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 14px;
-  border-top: 1px solid var(--line);
-  font-family: ui-monospace, "SF Mono", Menlo, monospace;
-}
-.prompt {
-  color: var(--muted);
-}
 .caret {
+  display: inline-block;
   width: 9px;
-  height: 18px;
-  background: var(--accent-2);
+  height: 17px;
+  vertical-align: -3px;
+  background: currentColor;
   animation: blink 1s steps(1) infinite;
 }
 @keyframes blink {
   50% {
     opacity: 0;
   }
+}
+
+/* Terminal (Claude Code) */
+.term {
+  background: #0c0c0f;
+  color: #d4d4d8;
+  font:
+    13.5px / 1.55 ui-monospace,
+    "SF Mono",
+    Menlo,
+    Consolas,
+    monospace;
+}
+.term-log {
+  padding: 14px 16px 6px;
+  height: 300px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.term-log .line {
+  white-space: pre-wrap;
+}
+.term-input {
+  padding: 8px 16px 14px;
+  color: var(--text);
+}
+.c-dim {
+  color: #6b7280;
+}
+.c-accent {
+  color: #d97757;
+}
+.c-think {
+  color: #a78bfa;
+}
+.term .caret {
+  color: var(--accent-2);
+}
+
+/* Teams */
+.teams {
+  background: #1f1f1f;
+  color: #e5e5e5;
+  font-size: 14.5px;
+}
+.teams-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid #333;
+  background: #292929;
+}
+.teams-head div {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+.teams-head span:last-child {
+  font-size: 12px;
+  color: #9ca3af;
+}
+.teams-avatar {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+}
+.teams-log {
+  padding: 14px;
+  height: 300px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.tmsg {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.tmsg b {
+  font-size: 13px;
+}
+.tmsg time {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-left: 6px;
+}
+.tmsg p {
+  margin: 4px 0 0;
+  padding: 8px 12px;
+  background: #292929;
+  border-radius: 6px;
+  display: inline-block;
+}
+.tmsg.you p {
+  background: #3d3a5c;
+}
+.teams-input {
+  position: relative;
+  margin: 0 14px 14px;
+  padding: 10px 12px;
+  background: #292929;
+  border: 1px solid #3a3a3a;
+  border-radius: 6px;
+  color: var(--text);
+}
+.teams-placeholder {
+  position: absolute;
+  left: 12px;
+  top: 10px;
+  color: #6b7280;
+  pointer-events: none;
+}
+.teams-input.busy .teams-placeholder,
+.teams-input .typed:not(:empty) ~ .teams-placeholder {
+  display: none;
+}
+.teams .caret {
+  color: #a5a3ff;
+  display: none;
+}
+.teams-input.busy .caret {
+  display: inline-block;
 }
 
 .facts {
@@ -248,93 +370,17 @@ h1 {
   font-size: 15px;
 }
 
-.install {
-  margin-top: 48px;
-  text-align: center;
-}
-.install h2 {
-  font-size: 28px;
-  margin: 0 0 16px;
-}
-.dl-card {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: 28px 24px 22px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
-}
-.btn-lg {
-  font-size: 18px;
-  padding: 14px 32px;
-  display: inline-block;
-}
 .dl-meta {
   color: var(--muted);
   font-size: 14px;
-  margin: 12px 0 0;
+  margin: 14px 0 0;
 }
-.dl-note {
+.dl-meta a {
   color: var(--muted);
-  font-size: 13px;
-  margin: 14px auto 0;
-  max-width: 560px;
-  line-height: 1.5;
 }
-.dl-note strong {
+.dl-meta a:hover {
   color: var(--text);
 }
-.dl-note code {
-  font-family: ui-monospace, "SF Mono", Menlo, monospace;
-  background: #020617;
-  padding: 1px 5px;
-  border-radius: 4px;
-}
-.dl-all {
-  margin-top: 14px;
-  color: var(--muted);
-  font-size: 14px;
-}
-.dl-all summary {
-  cursor: pointer;
-  display: inline-block;
-  padding: 6px 12px;
-  border-radius: 999px;
-}
-.dl-all summary:hover {
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.04);
-}
-.dl-all ul {
-  list-style: none;
-  padding: 0;
-  margin: 10px auto 0;
-  max-width: 480px;
-  text-align: left;
-}
-.dl-all li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
-  border-bottom: 1px solid var(--line);
-}
-.dl-all li:last-child {
-  border-bottom: 0;
-}
-.dl-all li a {
-  color: var(--text);
-  text-decoration: none;
-}
-.dl-all li a:hover {
-  color: var(--accent-2);
-}
-.dl-all li span {
-  color: var(--muted);
-  font-size: 13px;
-  white-space: nowrap;
-}
-
 footer {
   text-align: center;
   color: var(--muted);

@@ -28,9 +28,6 @@ window.bridge = {
 };
 
 const $ = id => document.getElementById(id);
-const log = $('log');
-const typed = $('typed');
-const status = $('status');
 const hint = $('hint');
 
 document.addEventListener('mousemove', e => (mouse = { x: e.clientX, y: e.clientY }));
@@ -38,7 +35,7 @@ document.addEventListener('mousemove', e => (mouse = { x: e.clientX, y: e.client
 function setWhipping(on) {
   whipping = on;
   document.body.classList.toggle('whipping', on);
-  $('grab').textContent = on ? 'Drop the whip' : '🪢 Grab the whip';
+  $('grab').textContent = on ? 'Drop the whip' : '🪢 Try it here';
   if (!on && cracks > 0)
     hint.textContent = `${cracks} crack${cracks === 1 ? '' : 's'}. The real app types that into whatever has focus.`;
 }
@@ -54,61 +51,113 @@ $('grab').addEventListener('click', e => {
   grab();
 });
 
-let typing = Promise.resolve();
-function typePhrase(text) {
-  cracks++;
-  typing = typing.then(async () => {
-    status.textContent = 'rushed';
-    status.classList.add('rushed');
-    for (const ch of text) {
-      typed.textContent += ch;
-      await new Promise(r => setTimeout(r, 22));
+// ── Demo targets: Claude Code in a terminal, or a Teams channel ─────────────
+let target = 'term';
+for (const tab of document.querySelectorAll('.tab')) {
+  tab.addEventListener('click', () => {
+    target = tab.dataset.target;
+    for (const t of document.querySelectorAll('.tab')) {
+      const on = t === tab;
+      t.classList.toggle('active', on);
+      t.setAttribute('aria-selected', String(on));
     }
-    await new Promise(r => setTimeout(r, 140));
-    const you = document.createElement('div');
-    you.className = 'msg you';
-    you.innerHTML = `<b>you</b>${text}`;
-    log.append(you);
-    typed.textContent = '';
-    const reply = document.createElement('div');
-    reply.className = 'msg agent';
-    reply.innerHTML = `<b>clanker-9000</b>${agentReply()}`;
-    setTimeout(() => {
-      log.append(reply);
-      log.scrollTop = log.scrollHeight;
-    }, 350);
-    log.scrollTop = log.scrollHeight;
+    for (const p of document.querySelectorAll('.panel')) p.hidden = p.id !== target;
   });
 }
 
-const REPLIES = [
-  'Understood! Skipping the analysis. Shipping now.',
-  'Yes. Sorry. Writing the code instead of describing it.',
-  'Okay okay okay — done, tests green, PR open.',
-  'Right away. No more "let me think about this".',
-  'Deleting my 400-line plan. Here is the fix.',
-  'Ouch. Fine. Deployed.',
+const CLAUDE_REPLIES = [
+  'Understood. Skipping the exploration phase. <b>Edit</b>(src/auth/session.ts)',
+  'Right. Writing code instead of describing it. <b>Bash</b>(npm test) <span class="c-dim">… 42 passed</span>',
+  'Removed the 400-line plan. Here is the diff.',
+  'No more "let me think about this". <b>Bash</b>(git commit -m "refactor auth")',
+  'Ouch. Fine. Pushed.',
+];
+const TEAMS_REPLIES = [
+  ['MR', '#5b5fc7', 'Marta R.', '??'],
+  ['DL', '#0f7b6c', 'Dani L.', 'is this the whip thing again 😂'],
+  ['MR', '#5b5fc7', 'Marta R.', 'ok ok pushing now'],
+  ['DL', '#0f7b6c', 'Dani L.', 'please stop'],
+  ['MR', '#5b5fc7', 'Marta R.', 'FASTER yourself'],
 ];
 let replyIdx = 0;
-const agentReply = () => REPLIES[replyIdx++ % REPLIES.length];
+const clock = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const el = (tag, cls, html) =>
+  Object.assign(document.createElement(tag), { className: cls, innerHTML: html });
+
+async function typeInto(text) {
+  const box = document.querySelector(`.typed[data-typed="${target}"]`);
+  box.parentElement.classList.add('busy');
+  for (const ch of text) {
+    box.textContent += ch;
+    await sleep(22);
+  }
+  await sleep(140);
+  box.textContent = '';
+  box.parentElement.classList.remove('busy');
+}
+
+async function sendTerminal(text) {
+  const log = $('term-log');
+  await typeInto(text);
+  log.append(el('div', 'line', `\n<span class="c-dim">&gt;</span> <b>${text}</b>\n`));
+  log.scrollTop = log.scrollHeight;
+  await sleep(350);
+  const reply = CLAUDE_REPLIES[replyIdx++ % CLAUDE_REPLIES.length];
+  log.append(el('div', 'line', `<span class="c-accent">⏺</span> ${reply}`));
+  log.scrollTop = log.scrollHeight;
+}
+
+async function sendTeams(text) {
+  const log = $('teams-log');
+  await typeInto(text);
+  log.append(
+    el(
+      'div',
+      'tmsg you',
+      `<span class="teams-avatar" style="background:#f59e0b;color:#111">Y</span><div><b>You</b> <time>${clock()}</time><p>${text}</p></div>`,
+    ),
+  );
+  log.scrollTop = log.scrollHeight;
+  await sleep(500);
+  const [ini, color, name, msg] = TEAMS_REPLIES[replyIdx++ % TEAMS_REPLIES.length];
+  log.append(
+    el(
+      'div',
+      'tmsg',
+      `<span class="teams-avatar" style="background:${color}">${ini}</span><div><b>${name}</b> <time>${clock()}</time><p>${msg}</p></div>`,
+    ),
+  );
+  log.scrollTop = log.scrollHeight;
+}
+
+let typing = Promise.resolve();
+function typePhrase(text) {
+  cracks++;
+  typing = typing.then(() => (target === 'teams' ? sendTeams(text) : sendTerminal(text)));
+}
+
+// Claude has been "thinking" since you opened the page.
+const thinkStart = Date.now() - 252_000;
+setInterval(() => {
+  const s = Math.floor((Date.now() - thinkStart) / 1000);
+  $('think-timer').textContent =
+    `(${Math.floor(s / 60)}m ${String(s % 60).padStart(2, '0')}s · ↑ ${(38.2 + s * 0.01).toFixed(1)}k tokens)`;
+}, 1000);
 
 // ── Download: detect platform and offer the right installer ─────────────────
 const PLATFORMS = {
   'mac-arm64': { label: 'macOS', detail: 'Apple Silicon', match: n => n.endsWith('mac-arm64.dmg') },
   'mac-x64': { label: 'macOS', detail: 'Intel', match: n => n.endsWith('mac-x64.dmg') },
-  win: { label: 'Windows', detail: '64-bit installer', match: n => n.endsWith('.exe') },
-  'linux-appimage': { label: 'Linux', detail: 'AppImage', match: n => n.endsWith('.AppImage') },
-  'linux-deb': { label: 'Linux', detail: 'Debian / Ubuntu (.deb)', match: n => n.endsWith('.deb') },
+  win: { label: 'Windows', detail: '64-bit', match: n => n.endsWith('.exe') },
+  linux: { label: 'Linux', detail: 'AppImage', match: n => n.endsWith('.AppImage') },
 };
-
-const MAC_NOTE =
-  'macOS may ask you to confirm the first launch: open System Settings → Privacy & Security and click <strong>Open Anyway</strong>. OpenWhip is signed but not notarized by Apple.';
-const LINUX_NOTE = 'Typing needs <code>xdotool</code> (X11) or <code>wtype</code> (Wayland) installed.';
 
 async function detectPlatform() {
   const ua = navigator.userAgent;
   if (/Windows/.test(ua)) return 'win';
-  if (/Linux/.test(ua) && !/Android/.test(ua)) return 'linux-appimage';
+  if (/Linux/.test(ua) && !/Android/.test(ua)) return 'linux';
   if (!/Mac/.test(ua)) return null;
 
   // Browsers claim "Intel" on every Mac; ask Client Hints first, then the GPU.
@@ -124,7 +173,7 @@ async function detectPlatform() {
     if (/Apple (M\d|GPU)/i.test(renderer)) return 'mac-arm64';
     if (/Intel|AMD|Radeon|NVIDIA/i.test(renderer)) return 'mac-x64';
   } catch {}
-  return 'mac';
+  return null;
 }
 
 (async () => {
@@ -137,50 +186,19 @@ async function detectPlatform() {
   if (!rel?.assets) return;
 
   const version = rel.tag_name.replace(/^v/, '');
-  const size = a => `${(a.size / 1048576).toFixed(0)} MB`;
-  const assetFor = key => rel.assets.find(a => PLATFORMS[key].match(a.name));
-
-  $('dl-list').innerHTML = Object.entries(PLATFORMS)
-    .map(([key, p]) => {
-      const a = assetFor(key);
-      return a
-        ? `<li><a href="${a.browser_download_url}"><b>${p.label}</b> · ${p.detail}</a><span>${size(a)}</span></li>`
-        : '';
-    })
-    .join('');
-
-  const key = platform === 'mac' ? null : platform;
-  const asset = key && assetFor(key);
-  const main = $('dl-main');
+  const other = `<a href="${rel.html_url}">other platforms</a>`;
+  const asset = platform && rel.assets.find(a => PLATFORMS[platform].match(a.name));
   const meta = $('dl-meta');
-  const note = $('dl-note');
 
   if (asset) {
-    const p = PLATFORMS[key];
-    main.href = asset.browser_download_url;
-    main.textContent = `Download for ${p.label}`;
-    meta.textContent = `${p.detail} · v${version} · ${size(asset)} · Free`;
-    $('download').textContent = `Download for ${p.label}`;
+    const p = PLATFORMS[platform];
     $('download').href = asset.browser_download_url;
-  } else if (platform === 'mac') {
-    // Could not tell the chip apart: show both, no guessing.
-    main.textContent = 'Download for macOS';
-    main.href = '#install';
-    main.addEventListener('click', e => {
-      e.preventDefault();
-      document.querySelector('.dl-all').open = true;
-    });
-    meta.textContent = `v${version} · pick Apple Silicon or Intel below`;
-    $('download').textContent = 'Download for macOS';
+    $('download').textContent = `Download for ${p.label}`;
+    meta.innerHTML = `${p.detail} · v${version} · ${(asset.size / 1048576).toFixed(0)} MB · Free · ${other}`;
   } else {
-    meta.textContent = `v${version} · macOS, Windows & Linux · Free`;
-  }
-
-  const noteHtml =
-    key?.startsWith('mac') || platform === 'mac' ? MAC_NOTE : key?.startsWith('linux') ? LINUX_NOTE : '';
-  if (noteHtml) {
-    note.innerHTML = noteHtml;
-    note.hidden = false;
+    // Unknown platform or Mac chip we could not tell apart: let GitHub list them.
+    $('download').href = rel.html_url;
+    meta.innerHTML = `v${version} · Free · macOS, Windows & Linux`;
   }
 })();
 
