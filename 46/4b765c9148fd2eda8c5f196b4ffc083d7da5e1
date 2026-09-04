@@ -1,0 +1,19 @@
+site/style.css
+  s_1527ecab6eec5f::t_26e2ac4a5b8744 387,606-607,616-619,625,633
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "464b765c9148fd2eda8c5f196b4ffc083d7da5e1",
+  "prompts": {},
+  "sessions": {
+    "s_1527ecab6eec5f": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "8ec55605-03bb-4a97-bfa1-aa3b6854ff16",
+        "model": "copilot/claude-fable-5.1"
+      },
+      "human_author": "Jordi Luis Fernández Fernández <jordilff@ext.inditex.com>"
+    }
+  }
+}
