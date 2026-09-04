@@ -1,0 +1,37 @@
+biome.json
+  s_1527ecab6eec5f::t_23bba9784f9c6d 1-29
+package-lock.json
+  s_1527ecab6eec5f::t_0800bb6a9545df 16,24-198
+package.json
+  s_1527ecab6eec5f::t_c4a1f99ffa3f24 25-28,39
+scripts/sign-mac.js
+  s_1527ecab6eec5f::t_4f0a81e4a89aec 18-20
+src/main.js
+  s_1527ecab6eec5f::t_0205f3f63529d5 3-13,61-66
+src/overlay.js
+  s_1527ecab6eec5f::t_59ca11de83b4cc 102-103
+src/release.js
+  s_1527ecab6eec5f::t_a781eac8a6b412 1-22
+src/typer.js
+  s_1527ecab6eec5f::t_c9a6af487b1433 35-40,70-74,77-87,126-129,134-138,146-153
+src/updater.js
+  s_1527ecab6eec5f::t_fe87edf02d6ab9 20,58-63,72-73,119,157-158,169-173
+test/release.test.js
+  s_1527ecab6eec5f::t_01723e34736c09 1-82
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "dfd941665390c65d0fbd1a20e800e3b31ba2167e",
+  "prompts": {},
+  "sessions": {
+    "s_1527ecab6eec5f": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "8ec55605-03bb-4a97-bfa1-aa3b6854ff16",
+        "model": "copilot/claude-fable-5.1"
+      },
+      "human_author": "Jordi Luis Fernández Fernández <jordilff@ext.inditex.com>"
+    }
+  }
+}
