@@ -2,7 +2,7 @@
   "name": "openwhip",
   "version": "2.1.4",
   "private": true,
-  "description": "A tiny menu-bar whip that tells your coding agent to hurry up",
+  "description": "A tiny menu-bar whip that types FASTER into your coding agent. Crack it, it types.",
   "author": {
     "name": "OpenWhip contributors",
     "email": "jlfernandezfernandez@users.noreply.github.com"
