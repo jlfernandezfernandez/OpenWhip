@@ -1,0 +1,21 @@
+package.json
+  s_1527ecab6eec5f::t_e5d02a07ddc9f3 63
+scripts/sign-mac.js
+  s_1527ecab6eec5f::t_27638e76a8d4d9 3-10,17-19
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "f1b5779ee9f7a81348d2687cc1a29a7c74e79cbb",
+  "prompts": {},
+  "sessions": {
+    "s_1527ecab6eec5f": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "8ec55605-03bb-4a97-bfa1-aa3b6854ff16",
+        "model": "copilot/claude-fable-5.1"
+      },
+      "human_author": "Jordi Luis Fernández Fernández <jordilff@ext.inditex.com>"
+    }
+  }
+}
