@@ -13,11 +13,27 @@ Teams, Slack, an IDE chat — and presses Enter.
 Download the installer for your platform from
 [GitHub Releases](https://github.com/jlfernandezfernandez/OpenWhip/releases).
 
-| Platform | File                                    | Notes                                                                                                                                                     |
-| -------- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| macOS    | `OpenWhip-*-mac-arm64.dmg` / `-x64.dmg` | Drag to Applications. Builds are unsigned, so on first launch right-click → **Open**, or run `xattr -dr com.apple.quarantine /Applications/OpenWhip.app`. |
-| Windows  | `OpenWhip-*-win-x64.exe`                | One-click installer, per-user, no admin rights.                                                                                                           |
-| Linux    | `.AppImage` or `.deb`                   | Needs a typing helper: `xdotool` (X11) or `wtype` (Wayland). `ydotool` is used as a Wayland fallback if `ydotoold` is running.                            |
+| Platform | File                                    | Notes                                                                                                                          |
+| -------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| macOS    | `OpenWhip-*-mac-arm64.dmg` / `-x64.dmg` | Drag to Applications, then see [First launch on macOS](#first-launch-on-macos).                                                |
+| Windows  | `OpenWhip-*-win-x64.exe`                | One-click installer, per-user, no admin rights.                                                                                |
+| Linux    | `.AppImage` or `.deb`                   | Needs a typing helper: `xdotool` (X11) or `wtype` (Wayland). `ydotool` is used as a Wayland fallback if `ydotoold` is running. |
+
+### First launch on macOS
+
+OpenWhip is not notarized (that needs a paid Apple Developer account), so
+Gatekeeper blocks the first launch. Nothing is wrong with your Mac. Either:
+
+- Open **System Settings → Privacy & Security**, scroll down and click
+  **Open Anyway** next to OpenWhip, or
+- run once in Terminal:
+
+  ```bash
+  xattr -dr com.apple.quarantine /Applications/OpenWhip.app
+  ```
+
+If you see *"OpenWhip is damaged and can't be opened"*, use the Terminal
+command — that wording is what macOS shows for unsigned downloads.
 
 ### Permissions
 
