@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>OpenWhip — crack the whip, your coding agent types faster</title>
-  <meta name="description" content="A tiny menu-bar whip that types FASTER into your coding agent. Try it in your browser, then install it for macOS, Windows or Linux.">
+  <meta name="description" content="A tiny menu-bar whip that types FASTER into your coding agent — Claude Code, Codex, Copilot, OpenCode, Antigravity — or into Teams. Try it in your browser, then install it for macOS, Windows or Linux.">
   <meta property="og:title" content="OpenWhip">
   <meta property="og:description" content="Crack the whip. Your coding agent types faster. Try it in the browser.">
   <meta property="og:image" content="https://jlfernandezfernandez.github.io/OpenWhip/hero.jpg">
@@ -22,7 +22,7 @@
     <img class="logo" src="icon.png" alt="" width="72" height="72">
     <h1>OpenWhip</h1>
     <p class="tagline">A tiny menu-bar whip for when your coding agent needs a little encouragement.</p>
-    <p class="sub">Crack it, it types <strong>FASTER</strong> into whatever has focus and presses Enter. Point it at Claude Code when it overthinks — or at the team channel when your colleagues do.</p>
+    <p class="sub">Crack it, it types <strong>FASTER</strong> into whatever has focus and presses Enter. Point it at your coding agent when it overthinks — or at the team channel when your colleagues do.</p>
 
     <div class="cta">
       <a id="download" class="btn btn-primary" href="https://github.com/jlfernandezfernandez/OpenWhip/releases/latest">Download</a>
@@ -34,47 +34,79 @@
 
   <main class="stage">
     <div class="tabs" role="tablist" aria-label="Where the whip types">
-      <button type="button" class="tab active" role="tab" data-target="term" aria-selected="true">⌘ Terminal · Claude Code</button>
-      <button type="button" class="tab" role="tab" data-target="teams" aria-selected="false">💬 Microsoft Teams</button>
+      <button type="button" class="tab active" role="tab" data-target="term" aria-selected="true" id="tab-term">Terminal</button>
+      <button type="button" class="tab" role="tab" data-target="teams" aria-selected="false">Microsoft Teams</button>
     </div>
 
-    <section class="panel term active" id="term" role="tabpanel" aria-label="Terminal running Claude Code">
-      <div class="panel-head">
-        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-        <span class="title">claude — ~/work/api — zsh</span>
+    <!-- Terminal: a random coding agent, window chrome follows the visitor's OS -->
+    <section class="window panel term" id="term" role="tabpanel">
+      <div class="chrome">
+        <span class="lights"><i></i><i></i><i></i></span>
+        <span class="chrome-title" id="term-title">zsh</span>
+        <span class="controls"><i>─</i><i>☐</i><i>✕</i></span>
       </div>
-      <div class="term-log" id="term-log">
-<span class="c-dim">╭────────────────────────────────────────╮</span>
-<span class="c-dim">│</span> <span class="c-accent">✻</span> Welcome to <b>Claude Code</b>!                     <span class="c-dim">│</span>
-<span class="c-dim">│</span>   <span class="c-dim">/help for help, /status for your current setup</span> <span class="c-dim">│</span>
-<span class="c-dim">╰────────────────────────────────────────╯</span>
-
-<span class="c-dim">&gt;</span> refactor the auth module and add tests
-
-<span class="c-accent">⏺</span> I'll start by exploring the codebase to understand the current auth flow.
-<span class="c-accent">⏺</span> <b>Read</b>(src/auth/**) <span class="c-dim">… 47 files</span>
-<span class="c-accent">⏺</span> Let me think carefully about the optimal architecture before making changes.
-<span class="c-accent">⏺</span> Considering edge cases. Considering more edge cases.
-<span class="c-think">✶ Thinking… <span id="think-timer">(4m 12s · ↑ 38.2k tokens)</span></span>
-</div>
-      <div class="term-input"><span class="c-dim">&gt;</span> <span class="typed" data-typed="term"></span><span class="caret"></span></div>
+      <div class="term-body">
+        <div class="term-log" id="term-log"></div>
+        <div class="term-input" id="term-input"><span class="prompt" id="term-prompt">&gt;</span> <span class="typed" data-typed="term"></span><span class="caret"></span></div>
+        <div class="term-status" id="term-status"></div>
+      </div>
     </section>
 
-    <section class="panel teams" id="teams" role="tabpanel" aria-label="Microsoft Teams chat" hidden>
-      <div class="teams-head">
-        <span class="teams-avatar teams-team">DT</span>
-        <div class="teams-title"><b>Dev Team</b><span>General</span></div>
-        <nav class="teams-tabs"><span class="on">Posts</span><span>Files</span><span>Wiki</span><span>+</span></nav>
-        <span class="teams-icons">◔ ⋯</span>
+    <!-- Teams: Contoso, Microsoft's own fictional company -->
+    <section class="window panel teams" id="teams" role="tabpanel" hidden>
+      <div class="chrome teams-chrome">
+        <span class="lights"><i></i><i></i><i></i></span>
+        <span class="teams-nav">‹ ›</span>
+        <span class="teams-search">🔍 Search</span>
+        <span class="teams-me">JF</span>
+        <span class="controls"><i>─</i><i>☐</i><i>✕</i></span>
       </div>
-      <div class="teams-log" id="teams-log">
-        <div class="tmsg"><span class="teams-avatar" style="background:#e97548">MR</span><div class="tbody"><div class="tmeta"><b>Marta R.</b><time>10:42</time></div><p>Any update on the release? Client is asking 🙈</p></div></div>
-        <div class="tmsg"><span class="teams-avatar" style="background:#0f7b6c">DL</span><div class="tbody"><div class="tmeta"><b>Dani L.</b><time>10:44</time></div><p>still waiting on the agent to finish the refactor</p></div></div>
-        <div class="tmsg"><span class="teams-avatar" style="background:#e97548">MR</span><div class="tbody"><div class="tmeta"><b>Marta R.</b><time>10:45</time></div><p>it's been 40 minutes</p></div></div>
-      </div>
-      <div class="teams-input">
-        <div class="teams-field"><span class="typed" data-typed="teams"></span><span class="caret"></span><span class="teams-placeholder">Type a message</span></div>
-        <div class="teams-toolbar"><span>A</span><span>😊</span><span>🖼</span><span>📎</span><span class="teams-send">➤</span></div>
+      <div class="teams-body">
+        <nav class="rail" aria-label="Teams navigation">
+          <span>🔔<small>Activity</small></span>
+          <span>💬<small>Chat</small></span>
+          <span class="on">👥<small>Teams</small></span>
+          <span>📅<small>Calendar</small></span>
+          <span>📞<small>Calls</small></span>
+          <span>📁<small>Files</small></span>
+        </nav>
+        <aside class="tlist" aria-label="Your teams">
+          <div class="tlist-head">Teams <span>⋯ ✎</span></div>
+          <div class="tteam">
+            <div class="tteam-name"><span class="teams-avatar tsq" style="background:#0078d4">CE</span>Contoso Engineering <em>⋯</em></div>
+            <div class="tchan on">General</div>
+            <div class="tchan">Release Train <b>3</b></div>
+            <div class="tchan">Incidents</div>
+            <div class="tchan">Random</div>
+          </div>
+          <div class="tteam">
+            <div class="tteam-name"><span class="teams-avatar tsq" style="background:#8764b8">PL</span>Platform <em>⋯</em></div>
+            <div class="tchan">General</div>
+            <div class="tchan">On-call</div>
+          </div>
+          <div class="tteam">
+            <div class="tteam-name"><span class="teams-avatar tsq" style="background:#498205">AI</span>Copilot Rollout <em>⋯</em></div>
+            <div class="tchan">General <b>12</b></div>
+          </div>
+        </aside>
+        <div class="tmain">
+          <div class="teams-head">
+            <span class="teams-avatar tsq" style="background:#0078d4">CE</span>
+            <div class="teams-title"><b>General</b><span>Contoso Engineering</span></div>
+            <nav class="teams-tabs"><span class="on">Posts</span><span>Files</span><span>Wiki</span><span>+</span></nav>
+            <span class="teams-icons">◔ ⋯</span>
+          </div>
+          <div class="teams-log" id="teams-log">
+            <div class="tday"><span>Today</span></div>
+            <div class="tmsg"><span class="teams-avatar" style="background:#e97548">MR</span><div class="tbody"><div class="tmeta"><b>Marta Rivas</b><time>10:42</time></div><p>Any update on the auth release? The Fabrikam folks are asking 🙈</p></div></div>
+            <div class="tmsg"><span class="teams-avatar" style="background:#0f7b6c">DL</span><div class="tbody"><div class="tmeta"><b>Dani Lorenzo</b><time>10:44</time></div><p>still waiting on the agent to finish the refactor</p></div></div>
+            <div class="tmsg"><span class="teams-avatar" style="background:#e97548">MR</span><div class="tbody"><div class="tmeta"><b>Marta Rivas</b><time>10:45</time></div><p>it's been 40 minutes</p></div></div>
+          </div>
+          <div class="teams-input">
+            <div class="teams-field"><span class="typed" data-typed="teams"></span><span class="caret"></span><span class="teams-placeholder">Type a message</span></div>
+            <div class="teams-toolbar"><span>A</span><span>😊</span><span>🖼</span><span>📎</span><span>⋯</span><span class="teams-send">➤</span></div>
+          </div>
+        </div>
       </div>
     </section>
 

@@ -51,7 +51,16 @@ $('grab').addEventListener('click', e => {
   grab();
 });
 
-// ── Demo targets: Claude Code in a terminal, or a Teams channel ─────────────
+// ── Demo targets ────────────────────────────────────────────────────────────
+const OS = /Windows/.test(navigator.userAgent)
+  ? 'win'
+  : /Mac/.test(navigator.userAgent)
+    ? 'mac'
+    : /Linux/.test(navigator.userAgent) && !/Android/.test(navigator.userAgent)
+      ? 'linux'
+      : 'mac';
+document.body.dataset.os = OS;
+
 let target = 'term';
 for (const tab of document.querySelectorAll('.tab')) {
   tab.addEventListener('click', () => {
@@ -65,19 +74,164 @@ for (const tab of document.querySelectorAll('.tab')) {
   });
 }
 
-const CLAUDE_REPLIES = [
-  'Understood. Skipping the exploration phase. <b>Edit</b>(src/auth/session.ts)',
-  'Right. Writing code instead of describing it. <b>Bash</b>(npm test) <span class="c-dim">… 42 passed</span>',
-  'Removed the 400-line plan. Here is the diff.',
-  'No more "let me think about this". <b>Bash</b>(git commit -m "refactor auth")',
-  'Ouch. Fine. Pushed.',
+// ── Coding agents: one is picked at random per visit ────────────────────────
+const SHELL = { mac: 'zsh', win: 'pwsh', linux: 'bash' }[OS];
+const CWD = { mac: '~/work/api', win: 'C:\\work\\api', linux: '~/work/api' }[OS];
+
+const AGENTS = [
+  {
+    id: 'claude',
+    name: 'Claude Code',
+    title: `claude — ${CWD} — ${SHELL}`,
+    accent: '#d97757',
+    prompt: '>',
+    banner: `<div class="box"><span class="c-accent">✻</span> Welcome to <b>Claude Code</b>!\n\n  <span class="c-dim">/help for help, /status for your current setup</span>\n\n  <span class="c-dim">cwd: ${CWD}</span></div>`,
+    task: 'refactor the auth module and add tests',
+    work: [
+      "I'll start by exploring the codebase to understand the current auth flow.",
+      '<b>Read</b>(src/auth/**) <span class="c-dim">… 47 files</span>',
+      'Let me think carefully about the optimal architecture before making changes.',
+      'Considering edge cases. Considering more edge cases.',
+    ],
+    bullet: '<span class="c-accent">⏺</span>',
+    thinking: s =>
+      `<span class="c-think">✶ Thinking… <span class="c-dim">(${s} · ↑ 38.2k tokens · esc to interrupt)</span></span>`,
+    replies: [
+      'Understood. Skipping the exploration phase. <b>Edit</b>(src/auth/session.ts)',
+      'Writing code instead of describing it. <b>Bash</b>(npm test) <span class="c-dim">… 42 passed</span>',
+      'Removed the 400-line plan. Here is the diff.',
+      'No more "let me think about this". <b>Bash</b>(git commit -m "refactor auth")',
+      'Ouch. Fine. Pushed.',
+    ],
+  },
+  {
+    id: 'codex',
+    name: 'Codex CLI',
+    title: `codex — ${CWD} — ${SHELL}`,
+    accent: '#e5e7eb',
+    prompt: '›',
+    banner: `<div class="box"><b>&gt;_ OpenAI Codex</b> <span class="c-dim">(v0.42.0)</span>\n\n<span class="c-dim">model:</span>     gpt-5-codex <span class="c-dim">(reasoning: high)</span>\n<span class="c-dim">directory:</span> ${CWD}\n<span class="c-dim">approval:</span>  on-request</div>`,
+    task: 'refactor the auth module and add tests',
+    work: [
+      '<span class="c-dim">codex</span>\nI want to fully understand the existing auth flow before touching anything.',
+      '<span class="c-dim">exec</span> <b>rg -n "session" src/auth</b> <span class="c-dim">… 312 matches</span>',
+      '<span class="c-dim">codex</span>\nThere are several architectural options here. Let me weigh them.',
+    ],
+    bullet: '',
+    thinking: s =>
+      `<span class="c-think">• Working <span class="c-dim">(${s} • esc to interrupt)</span></span>`,
+    replies: [
+      '<span class="c-dim">codex</span>\nUnderstood. Skipping analysis. <b>apply_patch</b> src/auth/session.ts',
+      '<span class="c-dim">exec</span> <b>npm test</b> <span class="c-dim">… 42 passed</span>',
+      '<span class="c-dim">codex</span>\nDone weighing options. Shipping the obvious one.',
+      '<span class="c-dim">exec</span> <b>git commit -m "refactor auth"</b>',
+      '<span class="c-dim">codex</span>\nPushed. Please put the whip down.',
+    ],
+  },
+  {
+    id: 'copilot',
+    name: 'GitHub Copilot CLI',
+    short: 'Copilot CLI',
+    title: `copilot — ${CWD} — ${SHELL}`,
+    accent: '#8957e5',
+    prompt: '>',
+    banner: `<div class="box"><span class="c-accent">◆</span> Welcome to <b>GitHub Copilot CLI</b>\n\n  <span class="c-dim">Model: Claude Sonnet 4.5 · /help for commands</span>\n  <span class="c-dim">Working in ${CWD}</span></div>`,
+    task: 'refactor the auth module and add tests',
+    work: [
+      "I'll begin with a thorough exploration of the repository structure.",
+      '<b>view</b> src/auth <span class="c-dim">(47 files)</span>',
+      'Before making changes, let me reason about the ideal approach.',
+      'Enumerating edge cases…',
+    ],
+    bullet: '<span class="c-accent">●</span>',
+    thinking: s => `<span class="c-think">✦ Thinking… <span class="c-dim">(${s})</span></span>`,
+    replies: [
+      'Got it. Straight to the edit. <b>edit</b> src/auth/session.ts',
+      'Skipping the essay. <b>bash</b> npm test <span class="c-dim">… 42 passed</span>',
+      'Removing the plan. Applying the fix.',
+      'Committing. <b>bash</b> git commit -m "refactor auth"',
+      'Pushed. Whip acknowledged.',
+    ],
+  },
+  {
+    id: 'opencode',
+    name: 'OpenCode',
+    title: `opencode — ${CWD} — ${SHELL}`,
+    accent: '#fab283',
+    prompt: '>',
+    banner: `<div class="oc-logo"><span class="c-dim">█▀█ █▀█ █▀▀ █▄ █</span> <span class="c-accent">█▀▀ █▀█ █▀▄ █▀▀</span>\n<span class="c-dim">█▄█ █▀▀ ██▄ █ ▀█</span> <span class="c-accent">█▄▄ █▄█ █▄▀ ██▄</span></div>\n<span class="c-dim">${CWD} · claude-sonnet-4-5 · build</span>`,
+    task: 'refactor the auth module and add tests',
+    work: [
+      "I'll explore the codebase first to understand the current implementation.",
+      '<span class="c-dim">→</span> <b>Glob</b> src/auth/** <span class="c-dim">47 files</span>',
+      '<span class="c-dim">→</span> <b>Read</b> src/auth/session.ts',
+      'Let me consider the architecture carefully.',
+    ],
+    bullet: '<span class="c-accent">▌</span>',
+    thinking: s => `<span class="c-think">◐ Thinking… <span class="c-dim">${s}</span></span>`,
+    replies: [
+      'Right. Skipping the tour. <span class="c-dim">→</span> <b>Edit</b> src/auth/session.ts',
+      '<span class="c-dim">→</span> <b>Bash</b> npm test <span class="c-dim">42 passed</span>',
+      'Plan deleted. Code written.',
+      '<span class="c-dim">→</span> <b>Bash</b> git commit -m "refactor auth"',
+      'Pushed.',
+    ],
+  },
+  {
+    id: 'antigravity',
+    name: 'Antigravity',
+    title: `antigravity — ${CWD} — ${SHELL}`,
+    accent: '#4c8df6',
+    prompt: '❯',
+    banner: `<div class="box"><span class="c-accent">✦</span> <b>Antigravity</b> Agent Manager <span class="c-dim">· Gemini 3 Pro</span>\n\n  <span class="c-dim">Workspace: ${CWD}</span>\n  <span class="c-dim">Mode: Planning</span></div>`,
+    task: 'refactor the auth module and add tests',
+    work: [
+      'Creating an implementation plan artifact before any code changes.',
+      '<b>Task</b> · Investigate auth module <span class="c-dim">(47 files)</span>',
+      'Drafting <b>implementation_plan.md</b> <span class="c-dim">… 400 lines</span>',
+      'Requesting plan review. Awaiting approval.',
+    ],
+    bullet: '<span class="c-accent">✦</span>',
+    thinking: s => `<span class="c-think">◌ Generating plan… <span class="c-dim">${s}</span></span>`,
+    replies: [
+      'Plan approved by whip. Switching to <b>Fast</b> mode.',
+      '<b>Task</b> · Edit src/auth/session.ts <span class="c-dim">✓</span>',
+      'Skipped the walkthrough artifact. Tests: <span class="c-dim">42 passed</span>',
+      '<b>Task</b> · git commit -m "refactor auth" <span class="c-dim">✓</span>',
+      'Pushed. Gravity restored.',
+    ],
+  },
 ];
+
+const agent = AGENTS[Math.floor(Math.random() * AGENTS.length)];
+document.documentElement.style.setProperty('--agent', agent.accent);
+$('tab-term').textContent = `Terminal · ${agent.short ?? agent.name}`;
+$('term-title').textContent = agent.title;
+$('term-prompt').textContent = agent.prompt;
+
+const termLog = $('term-log');
+termLog.innerHTML = `${agent.banner}\n\n<span class="c-dim">${agent.prompt}</span> ${agent.task}\n\n${agent.work
+  .map(w => `${agent.bullet} ${w}`.trim())
+  .join('\n')}\n<span id="think-line"></span>`;
+
+// The agent has been "thinking" since long before you opened the page.
+const thinkStart = Date.now() - 252_000;
+const fmt = s => `${Math.floor(s / 60)}m ${String(s % 60).padStart(2, '0')}s`;
+const tick = () => {
+  $('think-line').innerHTML = agent.thinking(fmt(Math.floor((Date.now() - thinkStart) / 1000)));
+};
+tick();
+setInterval(tick, 1000);
+termLog.scrollTop = termLog.scrollHeight;
+$('term-status').textContent = `${agent.name} · ${CWD}`;
+
+// ── Teams: Contoso Engineering › General ────────────────────────────────────
 const TEAMS_REPLIES = [
-  ['MR', '#e97548', 'Marta R.', '??'],
-  ['DL', '#0f7b6c', 'Dani L.', 'is this the whip thing again 😂'],
-  ['MR', '#e97548', 'Marta R.', 'ok ok pushing now'],
-  ['DL', '#0f7b6c', 'Dani L.', 'please stop'],
-  ['MR', '#e97548', 'Marta R.', 'FASTER yourself'],
+  ['MR', '#e97548', 'Marta Rivas', '??'],
+  ['DL', '#0f7b6c', 'Dani Lorenzo', 'is this the whip thing again 😂'],
+  ['PK', '#8764b8', 'Priya Kaur', 'pls not in General'],
+  ['MR', '#e97548', 'Marta Rivas', 'ok ok pushing now'],
+  ['DL', '#0f7b6c', 'Dani Lorenzo', 'FASTER yourself'],
 ];
 let replyIdx = 0;
 const clock = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -100,14 +254,13 @@ async function typeInto(text) {
 }
 
 async function sendTerminal(text) {
-  const log = $('term-log');
   await typeInto(text);
-  log.append(el('div', 'line', `\n<span class="c-dim">&gt;</span> <b>${text}</b>\n`));
-  log.scrollTop = log.scrollHeight;
+  termLog.append(el('div', 'line', `\n<span class="c-dim">${agent.prompt}</span> <b>${text}</b>\n`));
+  termLog.scrollTop = termLog.scrollHeight;
   await sleep(350);
-  const reply = CLAUDE_REPLIES[replyIdx++ % CLAUDE_REPLIES.length];
-  log.append(el('div', 'line', `<span class="c-accent">⏺</span> ${reply}`));
-  log.scrollTop = log.scrollHeight;
+  const reply = agent.replies[replyIdx++ % agent.replies.length];
+  termLog.append(el('div', 'line', `${agent.bullet} ${reply}`.trim()));
+  termLog.scrollTop = termLog.scrollHeight;
 }
 
 async function sendTeams(text) {
@@ -138,14 +291,6 @@ function typePhrase(text) {
   cracks++;
   typing = typing.then(() => (target === 'teams' ? sendTeams(text) : sendTerminal(text)));
 }
-
-// Claude has been "thinking" since you opened the page.
-const thinkStart = Date.now() - 252_000;
-setInterval(() => {
-  const s = Math.floor((Date.now() - thinkStart) / 1000);
-  $('think-timer').textContent =
-    `(${Math.floor(s / 60)}m ${String(s % 60).padStart(2, '0')}s · ↑ ${(38.2 + s * 0.01).toFixed(1)}k tokens)`;
-}, 1000);
 
 // ── Download: detect platform and offer the right installer ─────────────────
 const PLATFORMS = {
