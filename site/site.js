@@ -131,7 +131,6 @@ const AGENTS = [
   {
     id: 'copilot',
     name: 'GitHub Copilot CLI',
-    short: 'Copilot CLI',
     title: `copilot — ${CWD} — ${SHELL}`,
     accent: '#8957e5',
     prompt: '>',
@@ -205,7 +204,6 @@ const AGENTS = [
 
 const agent = AGENTS[Math.floor(Math.random() * AGENTS.length)];
 document.documentElement.style.setProperty('--agent', agent.accent);
-$('tab-term').textContent = `Terminal · ${agent.short ?? agent.name}`;
 $('term-title').textContent = agent.title;
 $('term-prompt').textContent = agent.prompt;
 

@@ -384,6 +384,7 @@ body[data-os="linux"] .term {
 .teams-body {
   display: grid;
   grid-template-columns: 64px 240px 1fr;
+  grid-template-rows: minmax(0, 1fr);
   height: 440px;
 }
 .rail {
@@ -602,6 +603,8 @@ body[data-os="linux"] .term {
 }
 .teams-input {
   flex: none;
+  display: flex;
+  align-items: flex-end;
   margin: 0 14px 14px;
   background: #292929;
   border: 1px solid #3d3d3d;
@@ -610,14 +613,16 @@ body[data-os="linux"] .term {
 }
 .teams-field {
   position: relative;
-  padding: 12px 14px 8px;
-  min-height: 22px;
+  flex: 1;
+  padding: 11px 14px;
+  min-height: 44px;
+  line-height: 22px;
   color: #f5f5f5;
 }
 .teams-placeholder {
   position: absolute;
   left: 14px;
-  top: 12px;
+  top: 11px;
   color: #8a8a8a;
   pointer-events: none;
 }
@@ -625,15 +630,9 @@ body[data-os="linux"] .term {
   display: none;
 }
 .teams-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 6px 12px 8px;
-  color: #adadad;
-  font-size: 13px;
+  padding: 0 12px 9px;
 }
 .teams-send {
-  margin-left: auto;
   color: #7f85f5;
   font-size: 16px;
 }
