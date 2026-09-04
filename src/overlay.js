@@ -92,8 +92,10 @@ resize();
 window.addEventListener('resize', resize);
 
 // ── Audio ───────────────────────────────────────────────────────────────────
+// The web demo (site/) hosts the same file from a different directory.
+const SOUNDS_BASE = window.OPENWHIP_SOUNDS ?? '../sounds/';
 const audioPool = ['A', 'B', 'C', 'D', 'E'].map(name => {
-  const audio = new Audio(`../sounds/${name}.mp3`);
+  const audio = new Audio(`${SOUNDS_BASE}${name}.mp3`);
   audio.preload = 'auto';
   return audio;
 });

@@ -12,6 +12,8 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-22c55e)](LICENSE)
 ![macOS · Windows · Linux](https://img.shields.io/badge/platform-macOS%20%C2%B7%20Windows%20%C2%B7%20Linux-64748b)
 
+**[▶ Try it in your browser](https://jlfernandezfernandez.github.io/OpenWhip/)**
+
 </div>
 
 Press **Ctrl/⌘ + Alt + W**, swing the mouse, and every crack types a short
@@ -27,8 +29,18 @@ has keyboard focus (a terminal, Teams, Slack, an IDE chat) and presses Enter.
 
 ## Install
 
-Grab the installer for your platform from
-[**Releases**](https://github.com/jlfernandezfernandez/OpenWhip/releases/latest).
+**macOS** — one line, no Gatekeeper prompt:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/jlfernandezfernandez/OpenWhip/main/install.sh | sh
+```
+
+It fetches the latest release for your Mac, verifies the SHA-256 GitHub
+publishes for it, installs into `/Applications` and launches OpenWhip.
+([Read the script](install.sh) — 40 lines of POSIX sh.)
+
+**Everything else** — grab the installer from
+[**Releases**](https://github.com/jlfernandezfernandez/OpenWhip/releases/latest):
 
 | Platform | File                                    | Notes                                                                                                                          |
 | -------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
@@ -38,8 +50,11 @@ Grab the installer for your platform from
 
 ### First launch on macOS
 
-OpenWhip is not notarized (that needs a paid Apple Developer account), so
-Gatekeeper blocks the first launch. Nothing is wrong with your Mac. Either:
+This only applies to the `.dmg` downloaded with a browser (the one-liner
+above avoids it). OpenWhip is signed, but not notarized by Apple — that needs
+a paid developer account — so Gatekeeper stops the first launch with *"Apple
+could not verify OpenWhip is free of malware"*. Nothing is wrong with your Mac.
+Either:
 
 - Open **System Settings → Privacy & Security**, scroll down and click
   **Open Anyway** next to OpenWhip, or
@@ -49,8 +64,8 @@ Gatekeeper blocks the first launch. Nothing is wrong with your Mac. Either:
   xattr -dr com.apple.quarantine /Applications/OpenWhip.app
   ```
 
-If you see *"OpenWhip is damaged and can't be opened"*, use the Terminal
-command — that wording is what macOS shows for unsigned downloads.
+Updates never hit this again: the app downloads them itself, and files it
+writes carry no quarantine flag.
 
 ### Permissions
 

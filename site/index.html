@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OpenWhip — crack the whip, your coding agent types faster</title>
+  <meta name="description" content="A tiny menu-bar whip that types FASTER into your coding agent. Try it in your browser, then install it for macOS, Windows or Linux.">
+  <meta property="og:title" content="OpenWhip">
+  <meta property="og:description" content="Crack the whip. Your coding agent types faster. Try it in the browser.">
+  <meta property="og:image" content="https://jlfernandezfernandez.github.io/OpenWhip/hero.jpg">
+  <link rel="icon" href="icon.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="c" aria-hidden="true"></canvas>
+
+  <header class="hero">
+    <img class="logo" src="icon.png" alt="" width="72" height="72">
+    <h1>OpenWhip</h1>
+    <p class="tagline">A tiny menu-bar whip for when your coding agent needs a little encouragement.</p>
+    <p class="sub">Crack it, it types <strong>FASTER</strong> into whatever has focus — terminal, Teams, Slack, your IDE chat — and presses Enter.</p>
+
+    <div class="cta">
+      <button type="button" id="grab" class="btn btn-primary">🪢 Grab the whip</button>
+      <a id="download" class="btn" href="https://github.com/jlfernandezfernandez/OpenWhip/releases/latest">Download</a>
+      <a class="btn btn-ghost" href="https://github.com/jlfernandezfernandez/OpenWhip">GitHub</a>
+    </div>
+    <p class="hint" id="hint">Grab it, swing the mouse hard, listen for the crack. Click to drop.</p>
+  </header>
+
+  <main class="stage">
+    <section class="chat" aria-label="Demo chat with a coding agent">
+      <div class="chat-head">
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        <span class="title">clanker-9000 · agent chat</span>
+        <span class="status" id="status">thinking…</span>
+      </div>
+      <div class="chat-log" id="log">
+        <div class="msg agent"><b>clanker-9000</b> I'll start by carefully analyzing the requirements. This may take a while…</div>
+        <div class="msg agent"><b>clanker-9000</b> Let me think about the optimal architecture for this change.</div>
+        <div class="msg agent"><b>clanker-9000</b> Considering edge cases. Considering more edge cases.</div>
+      </div>
+      <div class="chat-input">
+        <span class="prompt">›</span>
+        <span id="typed" class="typed"></span><span class="caret"></span>
+      </div>
+    </section>
+
+    <section class="facts">
+      <div class="fact"><span class="fact-title">Any input</span>Real keystrokes, full Unicode, into the focused app.</div>
+      <div class="fact"><span class="fact-title">Minimal permissions</span>macOS: Accessibility only. Windows &amp; Linux: nothing.</div>
+      <div class="fact"><span class="fact-title">Zero idle cost</span>The overlay sleeps when the whip is away.</div>
+      <div class="fact"><span class="fact-title">Self-updating</span>Downloads in the background, then <i>Restart to update</i>.</div>
+    </section>
+
+    <section class="install" id="install">
+      <h2>Install</h2>
+      <div class="install-mac">
+        <p>macOS one-liner — no Gatekeeper prompt:</p>
+        <pre><code id="cmd">curl -fsSL https://raw.githubusercontent.com/jlfernandezfernandez/OpenWhip/main/install.sh | sh</code><button type="button" class="copy" id="copy" title="Copy">Copy</button></pre>
+      </div>
+      <p class="others">Or grab the <a href="https://github.com/jlfernandezfernandez/OpenWhip/releases/latest">.dmg, .exe, .AppImage or .deb</a> from the latest release. <span id="ver"></span></p>
+    </section>
+  </main>
+
+  <footer>
+    MIT · Built with Electron · <a class="footer-link" href="https://github.com/jlfernandezfernandez/OpenWhip">Source</a> · Original idea by <a class="footer-link" href="https://github.com/GitFrog1111/OpenWhip">GitFrog1111</a>
+  </footer>
+
+  <script src="site.js"></script>
+  <script src="overlay.js"></script>
+</body>
+</html>
