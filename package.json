@@ -11,12 +11,12 @@
   "main": "src/main.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jlfernandezfernandez/OpenWhip.git"
+    "url": "git+https://github.com/jlfernandezfernandez/open-whip.git"
   },
   "bugs": {
-    "url": "https://github.com/jlfernandezfernandez/OpenWhip/issues"
+    "url": "https://github.com/jlfernandezfernandez/open-whip/issues"
   },
-  "homepage": "https://github.com/jlfernandezfernandez/OpenWhip#readme",
+  "homepage": "https://github.com/jlfernandezfernandez/open-whip#readme",
   "engines": {
     "node": ">=22.12"
   },
@@ -50,7 +50,7 @@
     "publish": {
       "provider": "github",
       "owner": "jlfernandezfernandez",
-      "repo": "OpenWhip"
+      "repo": "open-whip"
     },
     "files": [
       "src/**/*",
