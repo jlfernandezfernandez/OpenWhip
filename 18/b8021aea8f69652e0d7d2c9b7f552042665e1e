@@ -1,0 +1,21 @@
+.github/workflows/pages.yml
+  s_1527ecab6eec5f::t_61ca96b543b4c7 33-34
+site/site.js
+  s_1527ecab6eec5f::t_d76cb15b5584e9 228
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "18b8021aea8f69652e0d7d2c9b7f552042665e1e",
+  "prompts": {},
+  "sessions": {
+    "s_1527ecab6eec5f": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "8ec55605-03bb-4a97-bfa1-aa3b6854ff16",
+        "model": "copilot/claude-fable-5.1"
+      },
+      "human_author": "Jordi Luis Fernández Fernández <jordilff@ext.inditex.com>"
+    }
+  }
+}
