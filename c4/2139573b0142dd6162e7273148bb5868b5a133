@@ -1,0 +1,23 @@
+LICENSE
+  s_1527ecab6eec5f::t_634931e41498af 3-4
+README.md
+  s_1527ecab6eec5f::t_d7aeb3cd397d6b 1-4,7-13,15,17-26,30-31,55-80,84,89-90,100,102-110,112-116,121,125-129,131-134
+package.json
+  s_1527ecab6eec5f::t_ca8ed7ee988f99 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "c42139573b0142dd6162e7273148bb5868b5a133",
+  "prompts": {},
+  "sessions": {
+    "s_1527ecab6eec5f": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "8ec55605-03bb-4a97-bfa1-aa3b6854ff16",
+        "model": "copilot/claude-fable-5.1"
+      },
+      "human_author": "Jordi Luis Fernández Fernández <jordilff@ext.inditex.com>"
+    }
+  }
+}
