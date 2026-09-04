@@ -1,0 +1,18 @@
+README.md
+  h_6fb1b01c3fe550 16-36
+package.json
+  h_6fb1b01c3fe550 57,62
+scripts/adhoc-sign.js
+  h_6fb1b01c3fe550 1-14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "4dd0dfcf6ae7139c911c59ecac345d37ce39222f",
+  "prompts": {},
+  "humans": {
+    "h_6fb1b01c3fe550": {
+      "author": "Jordi Luis Fernández Fernández <jordilff@ext.inditex.com>"
+    }
+  }
+}
